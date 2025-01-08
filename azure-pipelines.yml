@@ -31,7 +31,7 @@ variables:
     value: 'gestion-comercial-login'
   # Nombre que aloja el codigo fuente
   - name: productName
-    value: 'cobranzaslogin'
+    value: 'gestionComerciallogin'
   # credencial para acceso a hub (Service Connection Name)
   - name: registryCredential
     value: 'DockerHubBancoGanadero'

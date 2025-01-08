@@ -3,7 +3,7 @@ pipeline {
         team = "motorcrm"                                                                // Nombre necesario para crear infra en ./infra/team/productName
         namespace = "web-services"                                                             // [Opcional] Nombre del namespace donde está desplegado 
         appalias = "gestion-comercial-login"                                                           // [Opcional] Alias con el que se desplegara
-        productName = "cobranzaslogin"                                                         // Nombre que aloja el codigo fuente
+        productName = "gestionComerciallogin"                                                         // Nombre que aloja el codigo fuente
         registryCredential = 'docker_hub'                                                      // credencial para acceso a hub
         dockerUser = "bancoganadero"                                                           // usuario con acceso
         dockerRepo = "${productName}"                                                          // Nombre del repositorio en el registro de contenedores
