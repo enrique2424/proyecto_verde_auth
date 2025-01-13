@@ -112,10 +112,10 @@ stages:
               Dockerfile: '**/Dockerfile'
               tags: '$(dockerImageTAG)'
           
-          - task: ShellScript@2
-            displayName: 'Scan dockerfile'
-            inputs:
-              scriptPath: scan.sh
+          # - task: ShellScript@2
+          #   displayName: 'Scan dockerfile'
+          #   inputs:
+          #     scriptPath: scan.sh
 
           - task : PublishTestResults@2
             displayName: 'Publish Report Trivy Scan - Vulnerabilities'
