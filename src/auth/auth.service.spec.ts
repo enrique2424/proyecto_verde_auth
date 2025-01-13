@@ -164,9 +164,9 @@ describe('AuthService', () => {
     });
   });
 
-  it('should build result from user RRJJ', async () => {
+  it('should build result from user SGC', async () => {
     const resultQuery = {
-      Name: 'Test User RRJJ',
+      Name: 'Test User SGC',
       CodUser: 1,
       Role: 'Admin',
       RoleId: 1,
@@ -181,9 +181,9 @@ describe('AuthService', () => {
     jest
       .spyOn(tokenCryptService, 'encode')
       .mockResolvedValue(Buffer.from(mockToken));
-    jest.spyOn(service, 'updTKNRRJJ').mockResolvedValue(undefined);
+    jest.spyOn(service, 'updTKNSGC').mockResolvedValue(undefined);
 
-    const result = await (service as any)['buildResultFromUserRRJJ'](
+    const result = await (service as any)['buildResultFromUserSGC'](
       resultQuery,
     );
 

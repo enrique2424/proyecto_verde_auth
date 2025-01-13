@@ -8,8 +8,8 @@ import { LoginInterfaceApp } from './strategies/interfaces/login.interface';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('login/rrjj')
-  async loginRRJJ(@Ip() ip, @Req() request, @Res() response, @Body() body) {
+  @Post('login/sgc')
+  async loginSGC(@Ip() ip, @Req() request, @Res() response, @Body() body) {
     const loginWeb: LoginInterfaceApp = {
       user: body.xxh1,
       password: body.xx99,
@@ -17,7 +17,7 @@ export class AuthController {
       ip,
       userAgent: request.headers['user-agent'],
     };
-    const resultTokenBuilder = await this.authService.loginRRJJ(loginWeb);
+    const resultTokenBuilder = await this.authService.loginSGC(loginWeb);
     this.responseMet(response, resultTokenBuilder);
   }
 
@@ -26,9 +26,9 @@ export class AuthController {
     return this.authService.verify(body.token);
   }
 
-  @Post('verify/rrjj')
-  verifyRRJJ(@Body() body) {
-    return this.authService.verifyRRJJ(body.token);
+  @Post('verify/sgc')
+  verifySGC(@Body() body) {
+    return this.authService.verifySGC(body.token);
   }
 
   responseMet(response, payload) {

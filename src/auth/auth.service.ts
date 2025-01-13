@@ -27,7 +27,7 @@ export class AuthService {
     private readonly configServices: ConfigService,
   ) {}
 
-  async loginRRJJ(loginParams: LoginInterfaceApp) {
+  async loginSGC(loginParams: LoginInterfaceApp) {
     try {
       await this.validateTokenUniqueUse(loginParams);
       const result = await this.tokenBuilderServices.login(
@@ -35,10 +35,10 @@ export class AuthService {
         loginParams.password,
       );
       if (result.success) {
-        const resultQuery = await this.loadRRJJ(loginParams.user);
+        const resultQuery = await this.loadSGC(loginParams.user);
         resultQuery['ip'] = loginParams.ip;
         resultQuery['userAgent'] = loginParams.userAgent;
-        return this.buildResultFromUserRRJJ(resultQuery);
+        return this.buildResultFromUserSGC(resultQuery);
       } else {
         const messege = 'Usuario: ' + loginParams.user + ' - ' + result.message;
         //this.emailService.sendEmail2(messege);
@@ -48,7 +48,7 @@ export class AuthService {
       }
     } catch (error) {
       console.log(
-        'Error en el controlador -> AuthService -> loginRRJJ: ' + error.message,
+        'Error en el controlador -> AuthService -> loginSGC: ' + error.message,
       );
       return {
         success: false,
@@ -76,15 +76,14 @@ export class AuthService {
       };
     }
   }
-  async verifyRRJJ(token) {
+  async verifySGC(token) {
     try {
       const buffer = Buffer.from(token, 'base64');
       const decode = await this.tokenCrypts.decode(buffer);
       return this.jwtService.verify(decode.toString('ascii'));
     } catch (error) {
       console.log(
-        'Error en el controlador -> AuthService -> verifyRRJJ: ' +
-          error.message,
+        'Error en el controlador -> AuthService -> verifySGC: ' + error.message,
       );
       return {
         status: false,
@@ -194,7 +193,7 @@ export class AuthService {
     return response;
   }
 
-  async loadRRJJ(clave: string) {
+  async loadSGC(clave: string) {
     try {
       const queryBuilder = this.usuarioRepository
         .createQueryBuilder('u')
@@ -236,12 +235,12 @@ export class AuthService {
         RoleId: resultQueryBuilder.ID_ROL,
       };
     } catch (error) {
-      console.error('Error en loadRRJJ:', error);
+      console.error('Error en loadSGC:', error);
       throw new Error(error.message || 'Error desconocido');
     }
   }
 
-  async updTKNRRJJ(pUsuario: number, pToken: string) {
+  async updTKNSGC(pUsuario: number, pToken: string) {
     let pIntExisteError;
     let pStrMensajeError;
     try {
@@ -271,12 +270,12 @@ export class AuthService {
         pStrMensajeError,
       ]);
     } catch (error) {
-      console.log('ERROR: AuthService -> updTKNRRJJ: ' + error.message);
+      console.log('ERROR: AuthService -> updTKNSGC: ' + error.message);
       throw new Error(error);
     }
   }
 
-  public async buildResultFromUserRRJJ(resultQuery) {
+  public async buildResultFromUserSGC(resultQuery) {
     const usuariosJwtPayload = {
       name: resultQuery.Name,
       codUser: resultQuery.CodUser,
@@ -354,7 +353,7 @@ export class AuthService {
         },
       },
     };
-    await this.updTKNRRJJ(usuariosJwtPayload.codUser, response.data.token);
+    await this.updTKNSGC(usuariosJwtPayload.codUser, response.data.token);
     return response;
   }
 
