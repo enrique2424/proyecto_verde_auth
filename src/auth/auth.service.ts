@@ -39,7 +39,6 @@ export class AuthService {
         return this.buildResultFromUserSGC(resultQuery);
       } else {
         const messege = 'Usuario: ' + loginParams.user + ' - ' + result.message;
-        //this.emailService.sendEmail2(messege);
         console.log('Correo enviado->3', messege);
 
         return result;
@@ -74,6 +73,7 @@ export class AuthService {
       };
     }
   }
+
   async verifySGC(token) {
     try {
       const buffer = Buffer.from(token, 'base64');

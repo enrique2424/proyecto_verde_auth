@@ -11,11 +11,10 @@ import { Usuarios } from './entities/usuarios.entity';
 import { TokenUnique } from './entities/token_unique.entity';
 import { AppDevicesModule } from '../app-devices/app-devices.module';
 import { TokenCryptService } from './token-crypt/token-crypt.service';
-import { EmailModule } from './module/mail.modulo';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, TokenCryptService, EmailModule],
+  providers: [AuthService, JwtStrategy, TokenCryptService],
   imports: [
     TypeOrmModule.forFeature([Usuarios, TokenUnique]),
     ConfigModule,
@@ -34,8 +33,7 @@ import { EmailModule } from './module/mail.modulo';
     }),
     TokenBuilderModule,
     AppDevicesModule,
-    EmailModule,
   ],
-  exports: [JwtStrategy, PassportModule, JwtModule, EmailModule],
+  exports: [JwtStrategy, PassportModule, JwtModule],
 })
 export class AuthModule {}
