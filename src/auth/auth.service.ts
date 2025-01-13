@@ -7,7 +7,6 @@ import { TokenUnique } from './entities/token_unique.entity';
 import { LoginInterfaceApp } from './strategies/interfaces/login.interface';
 import { TokenCryptService } from './token-crypt/token-crypt.service';
 import { AppDevicesService } from 'src/app-devices/app-devices.service';
-import { EmailService } from './module/mail.service';
 import { ConfigService } from '@nestjs/config';
 
 const sha256 = require('sha256');
@@ -23,7 +22,6 @@ export class AuthService {
     private readonly deviceService: AppDevicesService,
     @InjectRepository(TokenUnique)
     private readonly tokenUnique: Repository<TokenUnique>,
-    private readonly emailService: EmailService,
     private readonly configServices: ConfigService,
   ) {}
 
@@ -408,12 +406,5 @@ export class AuthService {
     await this.tokenUnique.insert(entityToken).catch((error) => {
       throw new Error(error);
     });
-  }
-  async sendEmail(body: string) {
-    return this.emailService.sendEmail(body, '');
-  }
-
-  async sendSoapRequest(body: string) {
-    return this.emailService.sendSoapRequest(body, '');
   }
 }

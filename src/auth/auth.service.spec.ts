@@ -4,12 +4,10 @@ import { JwtService } from '@nestjs/jwt';
 import { TokenBuilderService } from 'src/token-builder/token-builder.service';
 import { TokenCryptService } from './token-crypt/token-crypt.service';
 import { AppDevicesService } from 'src/app-devices/app-devices.service';
-import { EmailService } from './module/mail.service';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { Usuarios } from './entities/usuarios.entity';
 import { TokenUnique } from './entities/token_unique.entity';
-import { LoginInterfaceApp } from './strategies/interfaces/login.interface';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -17,7 +15,6 @@ describe('AuthService', () => {
   let tokenBuilderService: TokenBuilderService;
   let tokenCryptService: TokenCryptService;
   let appDevicesService: AppDevicesService;
-  let emailService: EmailService;
   let configService: ConfigService;
   let usuarioRepository: Repository<Usuarios>;
   let tokenUniqueRepository: Repository<TokenUnique>;
@@ -53,14 +50,6 @@ describe('AuthService', () => {
           },
         },
         {
-          provide: EmailService,
-          useValue: {
-            sendEmail: jest.fn(),
-            sendEmail2: jest.fn(),
-            sendSoapRequest: jest.fn(),
-          },
-        },
-        {
           provide: ConfigService,
           useValue: {},
         },
@@ -80,7 +69,6 @@ describe('AuthService', () => {
     tokenBuilderService = module.get<TokenBuilderService>(TokenBuilderService);
     tokenCryptService = module.get<TokenCryptService>(TokenCryptService);
     appDevicesService = module.get<AppDevicesService>(AppDevicesService);
-    emailService = module.get<EmailService>(EmailService);
     configService = module.get<ConfigService>(ConfigService);
     usuarioRepository = module.get<Repository<Usuarios>>('UsuariosRepository');
     tokenUniqueRepository = module.get<Repository<TokenUnique>>(
