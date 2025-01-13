@@ -12,7 +12,6 @@ WORKDIR /app
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY src ./src
 COPY test ./test
-COPY .env ./
 COPY .eslintrc.js ./
 COPY .prettierrc ./
 COPY nest-cli.json ./
