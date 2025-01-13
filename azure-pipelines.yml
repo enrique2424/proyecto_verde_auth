@@ -1,7 +1,7 @@
 trigger:
   - develop
   - staging
-  - release*
+  - release-*
   - main
 
 parameters:
@@ -11,7 +11,7 @@ parameters:
     default:
       - refs/heads/develop
       - refs/heads/staging
-      - refs/heads/release*
+      - refs/heads/release-*
       - refs/heads/main
 
 variables:
@@ -22,16 +22,16 @@ variables:
     value: 'https://$(PAT)@dev.azure.com/BancoGanadero/BGA-Internal/_git/gitops'
   # Nombre necesario para crear infra en ./infra/team/productName
   - name: team
-    value: 'motorcrm'
-  # [Opcional] Nombre del namespace donde está desplegado
+    value: 'bg-crm'
+  # [Opcional] Nombre del namespace donde está desplegado 
   - name: namespace
-    value: 'web-services'
+    value: 'bg-crm'
   # [Opcional] Alias con el que se desplegara
   - name: appalias
-    value: 'gestion-comercial-login'
+    value: 'authlogin-gestion-comercial'
   # Nombre que aloja el codigo fuente
   - name: productName
-    value: 'gestionComerciallogin'
+    value: 'authlogin-gestion-comercial'
   # credencial para acceso a hub (Service Connection Name)
   - name: registryCredential
     value: 'DockerHubBancoGanadero'
@@ -52,7 +52,7 @@ variables:
     value: 'http'
   # Numero del puerto a escuchar en el contenedor
   - name: portNumber
-    value: '3000'
+    value: '8080'
   # Nombre del chart a utilizar para este proyecto
   - name: chart
     value: 'simple-chart'
@@ -72,13 +72,17 @@ stages:
         pool:
           vmImage: Ubuntu-latest
         steps:
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: '20.x'
+          
           - script: |
-              npm install jest --save-dev
-              npm install --legacy-peer-deps
+              npm install
               npm run test:cov
             displayName: 'npm install and output coverage'
 
-          - task: SonarQubePrepare@6
+          - task: SonarQubePrepare@5
             inputs:
               SonarQube: 'SonarQube'
               scannerMode: 'CLI'
@@ -89,7 +93,7 @@ stages:
               extraProperties: |
                 sonar.javascript.lcov.reportPaths=./coverage/lcov.info
 
-          - task: SonarQubeAnalyze@6
+          - task: SonarQubeAnalyze@5
 
           - task: Bash@3
             displayName: 'Clean env variables'
@@ -98,7 +102,7 @@ stages:
               script: |
                 BRANCH_NAME="$(Build.SourceBranchName)"
                 [ -f .env ] && cat ./cicd/env-${BRANCH_NAME%-*} > .env || echo "No tenemos .env definido"
-
+          
           - task: Docker@2
             displayName: Build an image
             inputs:
@@ -107,13 +111,23 @@ stages:
               command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
               tags: '$(dockerImageTAG)'
-
+          
           - task: ShellScript@2
             displayName: 'Scan dockerfile'
             inputs:
               scriptPath: scan.sh
 
-          - task: SonarQubePublish@6
+          - task : PublishTestResults@2
+            displayName: 'Publish Report Trivy Scan - Vulnerabilities'
+            inputs: 
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/*.xml'
+              mergeTestResults: true
+              failTaskOnFailedTests: false
+              testRunTitle: 'Trivy Vulnerabilities'
+            condition: 'always()'
+
+          - task: SonarQubePublish@5
             inputs:
               pollingTimeoutSec: '300'
 
@@ -137,7 +151,7 @@ stages:
           - script: 'git clone --branch main $(gitopsRepository)'
             displayName: 'Clone repository of Helms'
             workingDirectory: '$(Agent.TempDirectory)'
-
+                
           - task: Bash@3
             displayName: 'Execute bash of argoCD'
             inputs:
@@ -186,7 +200,7 @@ stages:
           - script: 'git clone --branch main $(gitopsRepository)'
             displayName: 'Clone repository of Helms'
             workingDirectory: '$(Agent.TempDirectory)'
-
+                
           - task: Bash@3
             displayName: 'Execute bash of argoCD'
             inputs:
@@ -237,7 +251,7 @@ stages:
           - script: 'git clone --branch main $(gitopsRepository)'
             displayName: 'Clone repository of Helms'
             workingDirectory: '$(Agent.TempDirectory)'
-
+                
           - task: Bash@3
             displayName: 'Execute bash of argoCD'
             inputs:
@@ -288,7 +302,7 @@ stages:
           - script: 'git clone --branch main $(gitopsRepository)'
             displayName: 'Clone repository of Helms'
             workingDirectory: '$(Agent.TempDirectory)'
-
+                
           - task: Bash@3
             displayName: 'Execute bash of argoCD'
             inputs:
