@@ -205,7 +205,7 @@ export class AuthService {
           '"so"."NOMBRE" AS OFICINA',
           '"so"."ID_PLAZA"',
           '"sp"."NOMBRE" AS PLAZA',
-          '"G"."ESTADO" AS ESTADO',
+          '"G"."OBJETIVO" AS OBJETIVO',
           '"C"."ID_ROL"',
           '"G"."DESCRIPCION" AS ROL',
         ])
@@ -231,6 +231,7 @@ export class AuthService {
         Plaza: resultQueryBuilder.PLAZA,
         Role: resultQueryBuilder.ROL,
         RoleId: resultQueryBuilder.ID_ROL,
+        Objetivo: resultQueryBuilder.OBJETIVO,
       };
     } catch (error) {
       console.error('Error en loadSGC:', error);
@@ -285,6 +286,7 @@ export class AuthService {
       oficina: resultQuery.Oficina,
       role: resultQuery.Role,
       roleId: resultQuery.RoleId,
+      Objetivo: resultQuery.Objetivo,
       ip: resultQuery.ip,
       userAgent: resultQuery.userAgent,
     };
@@ -333,6 +335,11 @@ export class AuthService {
       'binary',
     ).toString('base64');
 
+    const objetivoBase64 = Buffer.from(
+      resultQuery.Objetivo.toString(),
+      'binary',
+    ).toString('base64');
+
     const response = {
       success: true,
       data: {
@@ -348,6 +355,7 @@ export class AuthService {
           xd65: oficinaBase64,
           xx24: roleIdBase64,
           xy15: roleNameBase64,
+          xr22: objetivoBase64,
         },
       },
     };
