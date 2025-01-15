@@ -6,6 +6,7 @@ async function main() {
   app.enableCors({
     origin: process.env.CORS.split(','),
   });
+  console.log('escuchando el puerto: ', process.env.PORT);
   await app.listen(process.env.PORT);
 }
 main();
