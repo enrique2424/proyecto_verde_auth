@@ -52,7 +52,7 @@ variables:
     value: 'http'
   # Numero del puerto a escuchar en el contenedor
   - name: portNumber
-    value: '8080'
+    value: '3000'
   # Nombre del chart a utilizar para este proyecto
   - name: chart
     value: 'simple-chart'
