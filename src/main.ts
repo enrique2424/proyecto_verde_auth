@@ -17,7 +17,6 @@ async function main() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document); // El endpoint de Swagger será /api
 
-  console.log('escuchando el puerto: ', process.env.PORT);
   await app.listen(process.env.PORT);
 }
 main();
