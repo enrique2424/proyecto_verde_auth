@@ -10,6 +10,7 @@ export class AuthController {
 
   @Post('login/sgc')
   async loginSGC(@Ip() ip, @Req() request, @Res() response, @Body() body) {
+    console.log('entro aqui');
     const loginWeb: LoginInterfaceApp = {
       user: body.xxh1,
       password: body.xx99,
@@ -33,6 +34,7 @@ export class AuthController {
 
   @Post('login/test')
   async test() {
+    console.log('endpoint test');
     const resultTokenBuilder = {
       mensaje: 'Sistema de Gestiones Comerciales',
     };
