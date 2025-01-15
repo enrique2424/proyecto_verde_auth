@@ -1,8 +1,8 @@
 {
   "name": "GestionComercialLoginServices",
-  "version": "2.4.0",
+  "version": "1.0.0",
   "description": "",
-  "author": "Luis Fernando Vidal",
+  "author": "Nery Carrizales Gonzales",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

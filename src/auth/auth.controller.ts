@@ -31,6 +31,14 @@ export class AuthController {
     return this.authService.verifySGC(body.token);
   }
 
+  @Post('login/test')
+  async test() {
+    const resultTokenBuilder = {
+      mensaje: 'Sistema de Gestiones Comerciales',
+    };
+    return resultTokenBuilder;
+  }
+
   responseMet(response, payload) {
     if (payload.success) {
       response.status(HttpStatus.OK).set({ xx14: '11' }).send(payload);
