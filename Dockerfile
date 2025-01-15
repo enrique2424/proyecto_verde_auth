@@ -51,7 +51,5 @@ RUN groupadd gestion-comercial-login \
     && useradd gestion-comercial-login -g gestion-comercial-login
 RUN chown -R gestion-comercial-login:gestion-comercial-login /usr/src/app
 USER gestion-comercial-login
-USER node
-EXPOSE 3000
 
 CMD ["node", "dist/main"]
