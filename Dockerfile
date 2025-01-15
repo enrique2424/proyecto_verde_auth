@@ -47,11 +47,10 @@ RUN apt-get update && apt-get install -y python3 build-essential && apt-get clea
 RUN yarn add glob rimraf
 RUN yarn install --production=false
 COPY --from=builder /app/dist ./dist
-USER node
-EXPOSE 3000
 RUN groupadd gestion-comercial-login \
     && useradd gestion-comercial-login -g gestion-comercial-login
 RUN chown -R gestion-comercial-login:gestion-comercial-login /usr/src/app
 USER gestion-comercial-login
-
+USER node
+EXPOSE 3000
 CMD ["node", "dist/main"]
