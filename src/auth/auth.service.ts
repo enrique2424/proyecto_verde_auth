@@ -365,6 +365,7 @@ export class AuthService {
 
   public async validateTokenUniqueUse(loginParams: LoginInterfaceApp) {
     try {
+      console.log('loginParams===> ', loginParams);
       const userHash = loginParams.tokenUnique.substring(0, 64);
       const passwordHash = loginParams.tokenUnique.substring(128, 192);
       if (sha256(loginParams.user) !== userHash) {
@@ -388,6 +389,7 @@ export class AuthService {
   }
 
   async checkTokenUniqueUse(token: string): Promise<boolean> {
+    console.log('token===> ', token);
     const result = await this.tokenUnique
       .createQueryBuilder()
       .where('token=:token', { token })
