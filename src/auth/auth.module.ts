@@ -9,7 +9,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { TokenBuilderModule } from 'src/token-builder/token-builder.module';
 import { Usuarios } from './entities/usuarios.entity';
 import { TokenUnique } from './entities/token_unique.entity';
-import { AppDevicesModule } from '../app-devices/app-devices.module';
 import { TokenCryptService } from './token-crypt/token-crypt.service';
 
 @Module({
@@ -32,7 +31,6 @@ import { TokenCryptService } from './token-crypt/token-crypt.service';
       },
     }),
     TokenBuilderModule,
-    AppDevicesModule,
   ],
   exports: [JwtStrategy, PassportModule, JwtModule],
 })

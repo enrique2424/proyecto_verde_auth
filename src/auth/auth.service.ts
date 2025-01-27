@@ -6,7 +6,6 @@ import { Usuarios } from './entities/usuarios.entity';
 import { TokenUnique } from './entities/token_unique.entity';
 import { LoginInterfaceApp } from './strategies/interfaces/login.interface';
 import { TokenCryptService } from './token-crypt/token-crypt.service';
-import { AppDevicesService } from 'src/app-devices/app-devices.service';
 import { ConfigService } from '@nestjs/config';
 
 const sha256 = require('sha256');
@@ -19,7 +18,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly tokenBuilderServices: TokenBuilderService,
     private readonly tokenCrypts: TokenCryptService,
-    private readonly deviceService: AppDevicesService,
     @InjectRepository(TokenUnique)
     private readonly tokenUnique: Repository<TokenUnique>,
     private readonly configServices: ConfigService,
@@ -157,38 +155,6 @@ export class AuthService {
       console.log('ERROR: AuthService -> updTKN: ' + error.message);
       throw new Error(error);
     }
-  }
-
-  public async buildResultFromUser(resultQuery) {
-    const usuariosJwtPayload = {
-      name: resultQuery.Name,
-      collectorId: resultQuery.CodCollector,
-      id: resultQuery.Id,
-      roleId: resultQuery.RoleId,
-      ip: resultQuery.ip,
-      userAgent: resultQuery.userAgent,
-    };
-    if (resultQuery.idDevice) {
-      usuariosJwtPayload['idDevice'] = resultQuery.idDevice;
-    }
-    const token = this.builtToken(usuariosJwtPayload);
-    const encode = await this.tokenCrypts.encode(token);
-    const roleIdBase64 = Buffer.from(
-      resultQuery.RoleId.toString(),
-      'binary',
-    ).toString('base64');
-    const response = {
-      success: true,
-      data: {
-        token: encode.toString('base64'),
-        userDetails: {
-          name: resultQuery.Name,
-          xx24: roleIdBase64,
-        },
-      },
-    };
-    await this.updTKN(usuariosJwtPayload.collectorId, response.data.token);
-    return response;
   }
 
   async loadSGC(clave: string) {

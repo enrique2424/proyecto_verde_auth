@@ -6,7 +6,6 @@ import { APP_GUARD } from '@nestjs/core';
 
 import { AuthModule } from './auth/auth.module';
 import { TokenBuilderModule } from './token-builder/token-builder.module';
-import { AppDevicesModule } from './app-devices/app-devices.module';
 
 @Module({
   imports: [
@@ -41,7 +40,6 @@ import { AppDevicesModule } from './app-devices/app-devices.module';
     }),
     AuthModule,
     TokenBuilderModule,
-    AppDevicesModule,
   ],
   controllers: [],
   providers: [
