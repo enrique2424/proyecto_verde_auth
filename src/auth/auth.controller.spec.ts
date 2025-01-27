@@ -10,6 +10,7 @@ describe('AuthController', () => {
 
   const mockAuthService = {
     loginSGC: jest.fn(),
+    verify: jest.fn(),
     verifySGC: jest.fn(),
   };
 
@@ -88,6 +89,23 @@ describe('AuthController', () => {
         message: 'Problemas de conexión',
       });
     });
+
+    it('should handle missing headers gracefully', async () => {
+      const mockRequest = { headers: {} };
+      const mockBody = { xxh1: 'testUser', xx99: 'testPassword' };
+      const mockIp = '127.0.0.1';
+      const res = mockResponse();
+
+      await authController.loginSGC(mockIp, mockRequest, res, mockBody);
+
+      expect(authService.loginSGC).toHaveBeenCalledWith({
+        user: mockBody.xxh1,
+        password: mockBody.xx99,
+        tokenUnique: undefined,
+        ip: mockIp,
+        userAgent: undefined,
+      });
+    });
   });
 
   describe('verifySGC', () => {
@@ -101,6 +119,27 @@ describe('AuthController', () => {
 
       expect(authService.verifySGC).toHaveBeenCalledWith(mockBody.token);
       expect(result).toEqual(mockResult);
+    });
+  });
+
+  describe('verify', () => {
+    it('should call verify and return its response', async () => {
+      const mockBody = { token: 'testToken' };
+      const mockResult = { valid: true };
+
+      mockAuthService.verify.mockResolvedValue(mockResult);
+
+      const result = await authController.verify(mockBody);
+
+      expect(authService.verify).toHaveBeenCalledWith(mockBody.token);
+      expect(result).toEqual(mockResult);
+    });
+  });
+
+  describe('test', () => {
+    it('should return a predefined message', async () => {
+      const result = await authController.test();
+      expect(result).toEqual({ mensaje: 'Sistema de Gestiones Comerciales' });
     });
   });
 });
