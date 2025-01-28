@@ -7,16 +7,7 @@ async function main() {
   app.enableCors({
     origin: process.env.CORS.split(','),
   });
-  // Configuración de Swagger
-  /*const config = new DocumentBuilder()
-    .setTitle('API Documentación')
-    .setDescription('Documentación de la API con Swagger')
-    .setVersion('1.0')
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);*/
-
+ 
   await app.listen(process.env.PORT);
 }
 main();
