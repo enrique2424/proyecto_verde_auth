@@ -127,6 +127,34 @@ describe('AuthService', () => {
           xx24: Buffer.from(resultQuery.RoleId.toString(), 'binary').toString(
             'base64',
           ),
+          xz20: Buffer.from(resultQuery.CodUser.toString(), 'binary').toString(
+            'base64',
+          ),
+          xv10: Buffer.from(resultQuery.IdBanca.toString(), 'binary').toString(
+            'base64',
+          ),
+          xt11: Buffer.from(resultQuery.Banca.toString(), 'binary').toString(
+            'base64',
+          ),
+          xa30: Buffer.from(resultQuery.IdPlaza.toString(), 'binary').toString(
+            'base64',
+          ),
+          xr51: Buffer.from(resultQuery.Plaza.toString(), 'binary').toString(
+            'base64',
+          ),
+          xm21: Buffer.from(
+            resultQuery.IdOficina.toString(),
+            'binary',
+          ).toString('base64'),
+          xd65: Buffer.from(resultQuery.Oficina.toString(), 'binary').toString(
+            'base64',
+          ),
+          xy15: Buffer.from(resultQuery.Role.toString(), 'binary').toString(
+            'base64',
+          ),
+          xr22: Buffer.from(resultQuery.Objetivo.toString(), 'binary').toString(
+            'base64',
+          ),
         },
       },
     });
@@ -204,7 +232,34 @@ describe('AuthService', () => {
           xx24: Buffer.from(resultQuery.RoleId.toString(), 'binary').toString(
             'base64',
           ),
-          xy15: Buffer.from(resultQuery.Role, 'binary').toString('base64'),
+          xz20: Buffer.from(resultQuery.CodUser.toString(), 'binary').toString(
+            'base64',
+          ),
+          xv10: Buffer.from(resultQuery.IdBanca.toString(), 'binary').toString(
+            'base64',
+          ),
+          xt11: Buffer.from(resultQuery.Banca.toString(), 'binary').toString(
+            'base64',
+          ),
+          xa30: Buffer.from(resultQuery.IdPlaza.toString(), 'binary').toString(
+            'base64',
+          ),
+          xr51: Buffer.from(resultQuery.Plaza.toString(), 'binary').toString(
+            'base64',
+          ),
+          xm21: Buffer.from(
+            resultQuery.IdOficina.toString(),
+            'binary',
+          ).toString('base64'),
+          xd65: Buffer.from(resultQuery.Oficina.toString(), 'binary').toString(
+            'base64',
+          ),
+          xy15: Buffer.from(resultQuery.Role.toString(), 'binary').toString(
+            'base64',
+          ),
+          xr22: Buffer.from(resultQuery.Objetivo.toString(), 'binary').toString(
+            'base64',
+          ),
         },
       },
     });
