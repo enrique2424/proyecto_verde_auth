@@ -11,11 +11,7 @@ import { TokenUnique } from './entities/token_unique.entity';
 describe('AuthService', () => {
   let service: AuthService;
   let jwtService: JwtService;
-  let tokenBuilderService: TokenBuilderService;
   let tokenCryptService: TokenCryptService;
-  let configService: ConfigService;
-  let usuarioRepository: Repository<Usuarios>;
-  let tokenUniqueRepository: Repository<TokenUnique>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -58,13 +54,7 @@ describe('AuthService', () => {
 
     service = module.get<AuthService>(AuthService);
     jwtService = module.get<JwtService>(JwtService);
-    tokenBuilderService = module.get<TokenBuilderService>(TokenBuilderService);
     tokenCryptService = module.get<TokenCryptService>(TokenCryptService);
-    configService = module.get<ConfigService>(ConfigService);
-    usuarioRepository = module.get<Repository<Usuarios>>('UsuariosRepository');
-    tokenUniqueRepository = module.get<Repository<TokenUnique>>(
-      'TokenUniqueRepository',
-    );
   });
 
   it('should be defined', () => {
@@ -115,8 +105,15 @@ describe('AuthService', () => {
     expect(jwtService.sign).toHaveBeenCalledWith({
       name: resultQuery.Name,
       codUser: resultQuery.CodUser,
+      idBanca: resultQuery.IdBanca,
+      banca: resultQuery.Banca,
+      idPlaza: resultQuery.IdPlaza,
+      plaza: resultQuery.Plaza,
+      idOficina: resultQuery.IdOficina,
+      oficina: resultQuery.Oficina,
       role: resultQuery.Role,
       roleId: resultQuery.RoleId,
+      Objetivo: resultQuery.Objetivo,
       ip: resultQuery.ip,
       userAgent: resultQuery.userAgent,
     });
@@ -185,8 +182,15 @@ describe('AuthService', () => {
     expect(jwtService.sign).toHaveBeenCalledWith({
       name: resultQuery.Name,
       codUser: resultQuery.CodUser,
+      idBanca: resultQuery.IdBanca,
+      banca: resultQuery.Banca,
+      idPlaza: resultQuery.IdPlaza,
+      plaza: resultQuery.Plaza,
+      idOficina: resultQuery.IdOficina,
+      oficina: resultQuery.Oficina,
       role: resultQuery.Role,
       roleId: resultQuery.RoleId,
+      Objetivo: resultQuery.Objetivo,
       ip: resultQuery.ip,
       userAgent: resultQuery.userAgent,
     });
