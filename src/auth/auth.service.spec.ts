@@ -86,14 +86,14 @@ describe('AuthService', () => {
     const resultQuery = {
       Name: 'Test User SGC',
       CodUser: 1,
-      idBanca: 1,
-      banca: 'Banca',
-      idPlaza: 1,
-      plaza: 'SCZ',
-      idOficina: 1,
-      oficina: 'Central',
-      role: 'Admin',
-      roleId: 1,
+      IdBanca: 1,
+      Banca: 'Banca',
+      IdPlaza: 1,
+      Plaza: 'SCZ',
+      IdOficina: 1,
+      Oficina: 'Central',
+      Role: 'Admin',
+      RoleId: 1,
       Objetivo: 60,
       ip: '127.0.0.1',
       userAgent: 'Mozilla',
@@ -115,8 +115,8 @@ describe('AuthService', () => {
     expect(jwtService.sign).toHaveBeenCalledWith({
       name: resultQuery.Name,
       codUser: resultQuery.CodUser,
-      role: resultQuery.role,
-      roleId: resultQuery.roleId,
+      role: resultQuery.Role,
+      roleId: resultQuery.RoleId,
       ip: resultQuery.ip,
       userAgent: resultQuery.userAgent,
     });
@@ -127,7 +127,7 @@ describe('AuthService', () => {
         token: mockEncodedToken,
         userDetails: {
           name: resultQuery.Name,
-          xx24: Buffer.from(resultQuery.roleId.toString(), 'binary').toString(
+          xx24: Buffer.from(resultQuery.RoleId.toString(), 'binary').toString(
             'base64',
           ),
         },
@@ -156,14 +156,14 @@ describe('AuthService', () => {
     const resultQuery = {
       Name: 'Test User SGC',
       CodUser: 1,
-      idBanca: 1,
-      banca: 'Banca',
-      idPlaza: 1,
-      plaza: 'SCZ',
-      idOficina: 1,
-      oficina: 'Central',
-      role: 'Admin',
-      roleId: 1,
+      IdBanca: 1,
+      Banca: 'Banca',
+      IdPlaza: 1,
+      Plaza: 'SCZ',
+      IdOficina: 1,
+      Oficina: 'Central',
+      Role: 'Admin',
+      RoleId: 1,
       Objetivo: 60,
       ip: '127.0.0.1',
       userAgent: 'Mozilla',
@@ -185,8 +185,8 @@ describe('AuthService', () => {
     expect(jwtService.sign).toHaveBeenCalledWith({
       name: resultQuery.Name,
       codUser: resultQuery.CodUser,
-      role: resultQuery.role,
-      roleId: resultQuery.roleId,
+      role: resultQuery.Role,
+      roleId: resultQuery.RoleId,
       ip: resultQuery.ip,
       userAgent: resultQuery.userAgent,
     });
@@ -197,10 +197,10 @@ describe('AuthService', () => {
         token: mockEncodedToken,
         userDetails: {
           name: resultQuery.Name,
-          xx24: Buffer.from(resultQuery.roleId.toString(), 'binary').toString(
+          xx24: Buffer.from(resultQuery.RoleId.toString(), 'binary').toString(
             'base64',
           ),
-          xy15: Buffer.from(resultQuery.role, 'binary').toString('base64'),
+          xy15: Buffer.from(resultQuery.Role, 'binary').toString('base64'),
         },
       },
     });
