@@ -9,8 +9,6 @@ import { TokenCryptService } from './token-crypt/token-crypt.service';
 import { ConfigService } from '@nestjs/config';
 
 const sha256 = require('sha256');
-const { BIND_OUT, STRING, NUMBER } = require('typeorm');
-
 export class AuthService {
   constructor(
     @InjectRepository(Usuarios)
