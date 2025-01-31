@@ -40,7 +40,6 @@ export class AuthController {
   }
 
   responseMet(response, payload) {
-    console.log('response====> ', response);
     console.log('payload====> ', payload);
     if (payload.success) {
       response.status(HttpStatus.OK).set({ xx14: '11' }).send(payload);
