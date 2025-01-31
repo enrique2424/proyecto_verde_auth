@@ -23,13 +23,13 @@ export class AuthService {
 
   async loginSGC(loginParams: LoginInterfaceApp) {
     try {
-      console.log('loginParams===> ', loginParams);
+      console.log('loginParams====> ', loginParams);
       await this.validateTokenUniqueUse(loginParams);
       const result = await this.tokenBuilderServices.login(
         loginParams.user,
         loginParams.password,
       );
-      console.log('this.tokenBuilderServices.login:===> ', result);
+      console.log('login====> ', result);
       if (result.success) {
         const resultQuery = await this.loadSGC(loginParams.user);
         resultQuery['ip'] = loginParams.ip;
@@ -264,8 +264,6 @@ export class AuthService {
     try {
       const userHash = loginParams.tokenUnique.substring(0, 64);
       const passwordHash = loginParams.tokenUnique.substring(128, 192);
-      console.log('userHash ===> ', userHash);
-      console.log('passwordHash ===> ', passwordHash);
       if (sha256(loginParams.user) !== userHash) {
         console.log('user: el token es invalido');
         throw new Error('user: el token es invalido');
@@ -277,7 +275,6 @@ export class AuthService {
       const existsInDB = await this.checkTokenUniqueUse(
         loginParams.tokenUnique,
       );
-      console.log('existsInDB ===> ', existsInDB);
       if (existsInDB) return true;
       else {
         throw new Error('token invalido');
