@@ -106,11 +106,23 @@ export class AuthService {
           '"C"."ID_ROL"',
           '"G"."DESCRIPCION" AS ROL',
         ])
-        .innerJoin('SGC_USUARIO', 'C', 'u.CLAVE="C"."COD_USUARIO"')
-        .innerJoin('SGC_ROL', 'G', '"C"."ID_ROL"="G"."IDENTIFICADOR"')
-        .innerJoin('SGC_BANCA', 'B', '"C"."ID_BANCA"="B"."IDENTIFICADOR"')
-        .innerJoin('SGC_OFICINA', 'so', '"C"."ID_OFICINA"="so"."IDENTIFICADOR"')
-        .innerJoin('SGC_PLAZA', 'sp', '"so"."ID_PLAZA"="sp"."IDENTIFICADOR"')
+        .innerJoin('GANADERO.SGC_USUARIO', 'C', 'u.CLAVE="C"."COD_USUARIO"')
+        .innerJoin('GANADERO.SGC_ROL', 'G', '"C"."ID_ROL"="G"."IDENTIFICADOR"')
+        .innerJoin(
+          'GANADERO.SGC_BANCA',
+          'B',
+          '"C"."ID_BANCA"="B"."IDENTIFICADOR"',
+        )
+        .innerJoin(
+          'GANADERO.SGC_OFICINA',
+          'so',
+          '"C"."ID_OFICINA"="so"."IDENTIFICADOR"',
+        )
+        .innerJoin(
+          'GANADERO.SGC_PLAZA',
+          'sp',
+          '"so"."ID_PLAZA"="sp"."IDENTIFICADOR"',
+        )
         .where(
           `clave='${clave}' and u.TZ_LOCK=0 and "G"."TZ_LOCK"=0 AND "C"."TZ_LOCK"=0`,
         );
