@@ -106,20 +106,24 @@ export class AuthService {
           '"C"."ID_ROL"',
           '"G"."DESCRIPCION" AS ROL',
         ])
-        .innerJoin('GANADERO.SGC_USUARIO', 'C', 'u.CLAVE="C"."COD_USUARIO"')
-        .innerJoin('GANADERO.SGC_ROL', 'G', '"C"."ID_ROL"="G"."IDENTIFICADOR"')
+        .innerJoin('"GANADERO"."SGC_USUARIO"', 'C', 'u.CLAVE="C"."COD_USUARIO"')
         .innerJoin(
-          'GANADERO.SGC_BANCA',
+          '"GANADERO"."SGC_ROL"',
+          'G',
+          '"C"."ID_ROL"="G"."IDENTIFICADOR"',
+        )
+        .innerJoin(
+          '"GANADERO"."SGC_BANCA"',
           'B',
           '"C"."ID_BANCA"="B"."IDENTIFICADOR"',
         )
         .innerJoin(
-          'GANADERO.SGC_OFICINA',
+          '"GANADERO"."SGC_OFICINA"',
           'so',
           '"C"."ID_OFICINA"="so"."IDENTIFICADOR"',
         )
         .innerJoin(
-          'GANADERO.SGC_PLAZA',
+          '"GANADERO"."SGC_PLAZA"',
           'sp',
           '"so"."ID_PLAZA"="sp"."IDENTIFICADOR"',
         )
