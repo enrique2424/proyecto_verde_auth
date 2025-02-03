@@ -23,11 +23,13 @@ export class AuthService {
 
   async loginSGC(loginParams: LoginInterfaceApp) {
     try {
+      console.log('loginParams====> ', loginParams);
       await this.validateTokenUniqueUse(loginParams);
       const result = await this.tokenBuilderServices.login(
         loginParams.user,
         loginParams.password,
       );
+      console.log('login====> ', result);
       if (result.success) {
         const resultQuery = await this.loadSGC(loginParams.user);
         resultQuery['ip'] = loginParams.ip;
