@@ -45,7 +45,7 @@ COPY package*.json ./
 COPY yarn.lock ./
 RUN apt-get update && apt-get install -y python3 build-essential && apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN yarn add glob rimraf
-RUN yarn install --production=false
+RUN yarn install --production=false --ignore-scripts
 COPY --from=builder /app/dist ./dist
 RUN groupadd gestion-comercial-login \
     && useradd gestion-comercial-login -g gestion-comercial-login
