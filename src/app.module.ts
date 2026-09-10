@@ -5,7 +5,6 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
 import { AuthModule } from './auth/auth.module';
-import { TokenBuilderModule } from './token-builder/token-builder.module';
 
 @Module({
   imports: [
@@ -25,21 +24,18 @@ import { TokenBuilderModule } from './token-builder/token-builder.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return {
-          type: 'oracle',
-          connectString: `${configService.get(
-            'ORACLE_HOST',
-          )}:${configService.get('ORACLE_PORT')}/${configService.get(
-            'ORACLE_DB_NAME',
-          )}`,
-          username: configService.get('ORACLE_USER'),
-          password: configService.get('ORACLE_PASSWORD'),
-          synchronize: false,
+          type: 'postgres',
+          host: configService.get('POSTGRES_HOST'),
+          port: configService.get('POSTGRES_PORT'),
+          database: configService.get('POSTGRES_DB'),
+          username: configService.get('POSTGRES_USER'),
+          password: configService.get('POSTGRES_PASSWORD'),
+          synchronize: true,
           autoLoadEntities: true,
         };
       },
     }),
     AuthModule,
-    TokenBuilderModule,
   ],
   controllers: [],
   providers: [

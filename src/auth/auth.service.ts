@@ -1,313 +1,154 @@
-import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { TokenBuilderService } from 'src/token-builder/token-builder.service';
-import { Usuarios } from './entities/usuarios.entity';
-import { TokenUnique } from './entities/token_unique.entity';
-import { LoginInterfaceApp } from './strategies/interfaces/login.interface';
-import { TokenCryptService } from './token-crypt/token-crypt.service';
+import {
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { UsersService } from '../users/users.service';
+import { SessionsService } from '../sessions/sessions.service';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { JwtAuthService } from './jwt/jwt.service';
 import { ConfigService } from '@nestjs/config';
+import { LoginDto } from './dto/login.dto';
 
-const sha256 = require('sha256');
+@Injectable()
 export class AuthService {
+  private readonly maxLoginAttempts: number;
+  private readonly lockoutDurationMinutes: number;
+
   constructor(
-    @InjectRepository(Usuarios)
-    private readonly usuarioRepository: Repository<Usuarios>,
-    private readonly jwtService: JwtService,
-    private readonly tokenBuilderServices: TokenBuilderService,
-    private readonly tokenCrypts: TokenCryptService,
-    @InjectRepository(TokenUnique)
-    private readonly tokenUnique: Repository<TokenUnique>,
-    private readonly configServices: ConfigService,
-  ) {}
+    private readonly usersService: UsersService,
+    private readonly sessionsService: SessionsService,
+    private readonly auditLogService: AuditLogService,
+    private readonly jwtAuthService: JwtAuthService,
+    private readonly configService: ConfigService,
+  ) {
+    this.maxLoginAttempts = this.configService.get('MAX_LOGIN_ATTEMPTS') || 5;
+    this.lockoutDurationMinutes =
+      this.configService.get('LOCKOUT_DURATION_MINUTES') || 15;
+  }
 
-  async loginSGC(loginParams: LoginInterfaceApp) {
-    try {
-      await this.validateTokenUniqueUse(loginParams);
-      const result = await this.tokenBuilderServices.login(
-        loginParams.user,
-        loginParams.password,
-      );
-      if (result.success) {
-        const resultQuery = await this.loadSGC(loginParams.user);
-        resultQuery['ip'] = loginParams.ip;
-        resultQuery['userAgent'] = loginParams.userAgent;
-        return this.buildResultFromUserSGC(resultQuery);
-      } else {
-        const messege = 'Usuario: ' + loginParams.user + ' - ' + result.message;
-        console.log('Correo enviado->3', messege);
+  async login(loginDto: LoginDto, ip: string, device: string) {
+    const { email, password } = loginDto;
 
-        return result;
-      }
-    } catch (error) {
-      console.log(
-        'Error en el controlador -> AuthService -> loginSGC: ' + error.message,
-      );
-      return {
-        success: false,
-        message: 'error en el controlador',
-      };
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      await this.auditLogService.log('LOGIN_FAILED', null, ip, device, false);
+      throw new UnauthorizedException('Credenciales inválidas');
     }
-  }
 
-  public builtToken(user) {
-    return this.jwtService.sign(user);
-  }
-
-  async verify(token) {
-    try {
-      const buffer = Buffer.from(token, 'base64');
-      const decode = await this.tokenCrypts.decode(buffer);
-      return this.jwtService.verify(decode.toString('ascii'));
-    } catch (error) {
-      console.log(
-        'Error en el controlador -> AuthService -> verify: ' + error.message,
-      );
-      return {
-        status: false,
-        message: 'Token Invalido',
-      };
+    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+      await this.auditLogService.log('LOGIN_LOCKED', user.id, ip, device, false);
+      throw new ForbiddenException('Cuenta bloqueada. Intente más tarde.');
     }
-  }
 
-  async verifySGC(token) {
-    try {
-      const buffer = Buffer.from(token, 'base64');
-      const decode = await this.tokenCrypts.decode(buffer);
-      return this.jwtService.verify(decode.toString('ascii'));
-    } catch (error) {
-      console.log(
-        'Error en el controlador -> AuthService -> verifySGC: ' + error.message,
-      );
-      return {
-        status: false,
-        message: 'Token Invalido',
-      };
+    const isPasswordValid =
+      await this.usersService.validatePassword(user, password);
+    if (!isPasswordValid) {
+      await this.usersService.incrementFailedAttempts(user);
+      await this.auditLogService.log('LOGIN_FAILED', user.id, ip, device, false);
+      throw new UnauthorizedException('Credenciales inválidas');
     }
-  }
 
-  async loadSGC(clave: string) {
-    try {
-      const queryBuilder = this.usuarioRepository
-        .createQueryBuilder('u')
-        .select([
-          '"u"."NOMBRE"',
-          '"C"."COD_USUARIO" AS COD_COBRADOR',
-          '"u"."CLAVE"',
-          '"C"."ID_BANCA"',
-          '"B"."NOMBRE" AS BANCA',
-          '"C"."ID_OFICINA"',
-          '"so"."NOMBRE" AS OFICINA',
-          '"so"."ID_PLAZA"',
-          '"sp"."NOMBRE" AS PLAZA',
-          '"G"."OBJETIVO" AS OBJETIVO',
-          '"C"."ID_ROL"',
-          '"G"."DESCRIPCION" AS ROL',
-        ])
-        .innerJoin('SGC_USUARIO', 'C', 'u.CLAVE="C"."COD_USUARIO"')
-        .innerJoin('SGC_ROL', 'G', '"C"."ID_ROL"="G"."IDENTIFICADOR"')
-        .innerJoin('SGC_BANCA', 'B', '"C"."ID_BANCA"="B"."IDENTIFICADOR"')
-        .innerJoin('SGC_OFICINA', 'so', '"C"."ID_OFICINA"="so"."IDENTIFICADOR"')
-        .innerJoin('SGC_PLAZA', 'sp', '"so"."ID_PLAZA"="sp"."IDENTIFICADOR"')
-        .where(
-          `clave='${clave}' and u.TZ_LOCK=0 and "G"."TZ_LOCK"=0 AND "C"."TZ_LOCK"=0`,
-        );
-      const resultQueryBuilder = await queryBuilder.getRawOne();
+    await this.usersService.resetFailedAttempts(user);
 
-      if (!resultQueryBuilder) throw new Error('no se encontro al usuario');
-      return {
-        Name: resultQueryBuilder.NOMBRE,
-        CodUser: resultQueryBuilder.COD_COBRADOR,
-        IdBanca: resultQueryBuilder.ID_BANCA,
-        Banca: resultQueryBuilder.BANCA,
-        IdOficina: resultQueryBuilder.ID_OFICINA,
-        Oficina: resultQueryBuilder.OFICINA,
-        IdPlaza: resultQueryBuilder.ID_PLAZA,
-        Plaza: resultQueryBuilder.PLAZA,
-        Role: resultQueryBuilder.ROL,
-        RoleId: resultQueryBuilder.ID_ROL,
-        Objetivo: resultQueryBuilder.OBJETIVO,
-      };
-    } catch (error) {
-      console.error('Error en loadSGC:', error);
-      throw new Error(error.message || 'Error desconocido');
-    }
-  }
-
-  async updTKNSGC(pUsuario: number, pToken: string) {
-    let pIntExisteError;
-    let pStrMensajeError;
-    try {
-      const query = `
-			DECLARE
-				PSTRUSUARIO VARCHAR2(10);
-				PTOKEN CLOB;
-				PINTEXISTEERROR NUMBER;
-				PSTRMENSAJEERROR VARCHAR2(200);
-			BEGIN
-				pIntExisteError := 0;
-				pStrMensajeError := '';	
-			
-				GANADERO.PKG_SGC_USUARIO.SPR_UPD_TOKEN(
-					PSTRUSUARIO => :pUsuario,
-					PTOKEN => :pToken,
-					PINTEXISTEERROR => PINTEXISTEERROR,
-					PSTRMENSAJEERROR => PSTRMENSAJEERROR
-				);
-				:pIntExisteError := pIntExisteError;
-				:pStrMensajeError := pStrMensajeError;
-			END;`;
-      await this.tokenUnique.query(query, [
-        pUsuario,
-        pToken,
-        pIntExisteError,
-        pStrMensajeError,
-      ]);
-    } catch (error) {
-      console.log('ERROR: AuthService -> updTKNSGC: ' + error.message);
-      throw new Error(error);
-    }
-  }
-
-  public async buildResultFromUserSGC(resultQuery) {
-    const usuariosJwtPayload = {
-      name: resultQuery.Name,
-      codUser: resultQuery.CodUser,
-      idBanca: resultQuery.IdBanca,
-      banca: resultQuery.Banca,
-      idPlaza: resultQuery.IdPlaza,
-      plaza: resultQuery.Plaza,
-      idOficina: resultQuery.IdOficina,
-      oficina: resultQuery.Oficina,
-      role: resultQuery.Role,
-      roleId: resultQuery.RoleId,
-      Objetivo: resultQuery.Objetivo,
-      ip: resultQuery.ip,
-      userAgent: resultQuery.userAgent,
-    };
-
-    const token = this.builtToken(usuariosJwtPayload);
-    const encode = await this.tokenCrypts.encode(token);
-    const roleIdBase64 = Buffer.from(
-      resultQuery.RoleId.toString(),
-      'binary',
-    ).toString('base64');
-    const roleNameBase64 = Buffer.from(resultQuery.Role, 'binary').toString(
-      'base64',
+    const accessToken = this.jwtAuthService.generateAccessToken(
+      user.id,
+      user.email,
     );
-    const codeUserBase64 = Buffer.from(
-      resultQuery.CodUser.toString(),
-      'binary',
-    ).toString('base64');
+    const { token: refreshToken } =
+      this.jwtAuthService.generateRefreshToken(user.id);
 
-    const idBancaBase64 = Buffer.from(
-      resultQuery.IdBanca.toString(),
-      'binary',
-    ).toString('base64');
+    await this.sessionsService.createRefreshToken(user.id, device, ip);
 
-    const bancaBase64 = Buffer.from(
-      resultQuery.Banca.toString(),
-      'binary',
-    ).toString('base64');
+    await this.auditLogService.log('LOGIN_SUCCESS', user.id, ip, device, true);
 
-    const idPlazaBase64 = Buffer.from(
-      resultQuery.IdPlaza.toString(),
-      'binary',
-    ).toString('base64');
-
-    const plazaBase64 = Buffer.from(
-      resultQuery.Plaza.toString(),
-      'binary',
-    ).toString('base64');
-
-    const idOficinaBase64 = Buffer.from(
-      resultQuery.IdOficina.toString(),
-      'binary',
-    ).toString('base64');
-
-    const oficinaBase64 = Buffer.from(
-      resultQuery.Oficina.toString(),
-      'binary',
-    ).toString('base64');
-
-    const objetivoBase64 = Buffer.from(
-      resultQuery.Objetivo.toString(),
-      'binary',
-    ).toString('base64');
-
-    const response = {
+    return {
       success: true,
       data: {
-        token: encode.toString('base64'),
-        userDetails: {
-          name: resultQuery.Name,
-          xz20: codeUserBase64,
-          xv10: idBancaBase64,
-          xt11: bancaBase64,
-          xa30: idPlazaBase64,
-          xr51: plazaBase64,
-          xm21: idOficinaBase64,
-          xd65: oficinaBase64,
-          xx24: roleIdBase64,
-          xy15: roleNameBase64,
-          xr22: objetivoBase64,
-        },
+        accessToken,
+        refreshToken,
+        expiresIn: 900,
       },
     };
-    await this.updTKNSGC(usuariosJwtPayload.codUser, response.data.token);
-    return response;
   }
 
-  public async validateTokenUniqueUse(loginParams: LoginInterfaceApp) {
-    try {
-      const userHash = loginParams.tokenUnique.substring(0, 64);
-      const passwordHash = loginParams.tokenUnique.substring(128, 192);
-      if (sha256(loginParams.user) !== userHash) {
-        console.log('user: el token es invalido');
-        throw new Error('user: el token es invalido');
-      }
-      if (sha256(loginParams.password) !== passwordHash) {
-        console.log('password: el token es invalido');
-        throw new Error('password: el token es invalido');
-      }
-      const existsInDB = await this.checkTokenUniqueUse(
-        loginParams.tokenUnique,
-      );
-      if (existsInDB) return true;
-      else {
-        throw new Error('token invalido');
-      }
-    } catch (error) {
-      throw new error(error);
+  async refresh(refreshToken: string, ip: string, device: string) {
+    const payload = this.jwtAuthService.verifyRefreshToken(refreshToken);
+    if (!payload) {
+      throw new UnauthorizedException('Refresh token inválido');
     }
+
+    const isValid = await this.sessionsService.validateRefreshToken(
+      payload.sub,
+      refreshToken,
+    );
+    if (!isValid) {
+      throw new UnauthorizedException(
+        'Refresh token inválido o expirado',
+      );
+    }
+
+    const user = await this.usersService.findById(payload.sub);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Usuario no encontrado o inactivo');
+    }
+
+    const newAccessToken = this.jwtAuthService.generateAccessToken(
+      user.id,
+      user.email,
+    );
+    const { token: newRefreshToken } =
+      this.jwtAuthService.generateRefreshToken(user.id);
+
+    await this.sessionsService.revokeSession(user.id, refreshToken);
+    await this.sessionsService.createRefreshToken(user.id, device, ip);
+
+    await this.auditLogService.log(
+      'TOKEN_REFRESH',
+      user.id,
+      ip,
+      device,
+      true,
+    );
+
+    return {
+      success: true,
+      data: {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        expiresIn: 900,
+      },
+    };
   }
 
-  async checkTokenUniqueUse(token: string): Promise<boolean> {
-    const result = await this.tokenUnique
-      .createQueryBuilder()
-      .where('token=:token', { token })
-      .getOne()
-      .then((result) => {
-        if (!result) {
-          this.storeTokenUsed(token);
-          return true;
-        } else {
-          console.log('Estan robando el token: ', result);
-          return false;
-        }
-      })
-      .catch((error) => {
-        throw new Error(error);
-      });
-    return result;
+  async logout(
+    refreshToken: string,
+    userId: string,
+    ip: string,
+    device: string,
+  ) {
+    await this.sessionsService.revokeSession(userId, refreshToken);
+    await this.auditLogService.log('LOGOUT', userId, ip, device, true);
+    return { success: true, message: 'Sesión cerrada correctamente' };
   }
 
-  async storeTokenUsed(token: string) {
-    const entityToken = new TokenUnique();
-    entityToken.fechaCreacion = new Date();
-    entityToken.token = token;
-    await this.tokenUnique.insert(entityToken).catch((error) => {
-      throw new Error(error);
-    });
+  async verify(token: string) {
+    try {
+      let decodedToken = token;
+      try {
+        const buffer = Buffer.from(token, 'base64');
+        decodedToken = buffer.toString('ascii');
+      } catch {
+        // Token is not base64 encoded, use as is
+      }
+
+      const payload = this.jwtAuthService.verifyAccessToken(decodedToken);
+      if (!payload) {
+        return { status: false, message: 'Token Inválido' };
+      }
+      return { status: true, payload };
+    } catch {
+      return { status: false, message: 'Token Inválido' };
+    }
   }
 }

@@ -3,19 +3,26 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { TokenBuilderModule } from 'src/token-builder/token-builder.module';
-import { Usuarios } from './entities/usuarios.entity';
-import { TokenUnique } from './entities/token_unique.entity';
 import { TokenCryptService } from './token-crypt/token-crypt.service';
+import { JwtAuthService } from './jwt/jwt.service';
+
+import { UsersModule } from '../users/users.module';
+import { SessionsModule } from '../sessions/sessions.module';
+import { AuditLogModule } from '../audit-log/audit-log.module';
+
+import { User } from '../users/entities/user.entity';
+import { Session } from '../sessions/entities/session.entity';
+import { AuditLog } from '../audit-log/entities/audit-log.entity';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, TokenCryptService],
+  providers: [AuthService, JwtAuthService, JwtStrategy, TokenCryptService],
   imports: [
-    TypeOrmModule.forFeature([Usuarios, TokenUnique]),
+    TypeOrmModule.forFeature([User, Session, AuditLog]),
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
@@ -23,15 +30,22 @@ import { TokenCryptService } from './token-crypt/token-crypt.service';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return {
-          secret: configService.get('JWT_SECRET'),
+          secret: configService.get('JWT_ACCESS_SECRET'),
           signOptions: {
-            expiresIn: configService.get('EXPIRES'),
+            expiresIn: configService.get('JWT_ACCESS_EXPIRES') || '15m',
           },
         };
       },
     }),
-    TokenBuilderModule,
+    UsersModule,
+    SessionsModule,
+    AuditLogModule,
   ],
-  exports: [JwtStrategy, PassportModule, JwtModule],
+  exports: [
+    JwtStrategy,
+    PassportModule,
+    JwtModule,
+    AuthService,
+  ],
 })
 export class AuthModule {}

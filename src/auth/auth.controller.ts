@@ -1,52 +1,61 @@
-import { Controller, Post, Body, Res, Req, Ip } from '@nestjs/common';
-import { HttpStatus } from '@nestjs/common/enums';
-
+import {
+  Controller,
+  Post,
+  Body,
+  Ip,
+  Req,
+  Headers,
+  HttpCode,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginInterfaceApp } from './strategies/interfaces/login.interface';
+import { LoginDto, RefreshTokenDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('login/sgc')
-  async loginSGC(@Ip() ip, @Req() request, @Res() response, @Body() body) {
-    const loginWeb: LoginInterfaceApp = {
-      user: body.xxh1,
-      password: body.xx99,
-      tokenUnique: request.headers['xxpm'],
+  @Post('login')
+  @HttpCode(200)
+  async login(@Body() loginDto: LoginDto, @Ip() ip: string, @Req() request: any) {
+    const device = request.headers['user-agent'] || 'unknown';
+    return this.authService.login(loginDto, ip, device);
+  }
+
+  @Post('refresh')
+  @HttpCode(200)
+  async refresh(
+    @Body() refreshTokenDto: RefreshTokenDto,
+    @Ip() ip: string,
+    @Req() request: any,
+  ) {
+    const device = request.headers['user-agent'] || 'unknown';
+    return this.authService.refresh(
+      refreshTokenDto.refreshToken,
       ip,
-      userAgent: request.headers['user-agent'],
-    };
-    const resultTokenBuilder = await this.authService.loginSGC(loginWeb);
-    this.responseMet(response, resultTokenBuilder);
+      device,
+    );
+  }
+
+  @Post('logout')
+  @HttpCode(200)
+  async logout(
+    @Body() refreshTokenDto: RefreshTokenDto,
+    @Headers('x-user-id') userId: string,
+    @Ip() ip: string,
+    @Req() request: any,
+  ) {
+    const device = request.headers['user-agent'] || 'unknown';
+    return this.authService.logout(
+      refreshTokenDto.refreshToken,
+      userId,
+      ip,
+      device,
+    );
   }
 
   @Post('verify')
-  verify(@Body() body) {
+  @HttpCode(200)
+  verify(@Body() body: { token: string }) {
     return this.authService.verify(body.token);
-  }
-
-  @Post('verify/sgc')
-  verifySGC(@Body() body) {
-    return this.authService.verifySGC(body.token);
-  }
-
-  @Post('login/test')
-  async test() {
-    const resultTokenBuilder = {
-      mensaje: 'Sistema de Gestiones Comerciales',
-    };
-    return resultTokenBuilder;
-  }
-
-  responseMet(response, payload) {
-    if (payload.success) {
-      response.status(HttpStatus.OK).set({ xx14: '11' }).send(payload);
-    } else {
-      response.status(HttpStatus.UNAUTHORIZED).send({
-        success: 'false',
-        message: 'Problemas de conexión',
-      });
-    }
   }
 }
