@@ -1,5 +1,8 @@
 import { DataSource } from 'typeorm';
+import { config } from 'dotenv';
 import { seedAdminUser } from './admin-user.seed';
+
+config();
 
 const dataSource = new DataSource({
   type: 'postgres',
