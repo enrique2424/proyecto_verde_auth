@@ -9,6 +9,9 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { TokenCryptService } from './token-crypt/token-crypt.service';
 import { JwtAuthService } from './jwt/jwt.service';
+import { MfaService } from './mfa/mfa.service';
+import { MfaController } from './mfa/mfa.controller';
+import { BackupCodesService } from './mfa/backup-codes.service';
 
 import { UsersModule } from '../users/users.module';
 import { SessionsModule } from '../sessions/sessions.module';
@@ -19,8 +22,20 @@ import { Session } from '../sessions/entities/session.entity';
 import { AuditLog } from '../audit-log/entities/audit-log.entity';
 
 @Module({
-  controllers: [AuthController],
-  providers: [AuthService, JwtAuthService, JwtStrategy, TokenCryptService],
+  controllers: [AuthController, MfaController],
+  providers: [
+    AuthService,
+    JwtAuthService,
+    JwtStrategy,
+    MfaService,
+    BackupCodesService,
+    {
+      provide: TokenCryptService,
+      useFactory: (configService: ConfigService) =>
+        new TokenCryptService(configService.get('MFA_ENCRYPTION_KEY')),
+      inject: [ConfigService],
+    },
+  ],
   imports: [
     TypeOrmModule.forFeature([User, Session, AuditLog]),
     ConfigModule,
@@ -46,6 +61,9 @@ import { AuditLog } from '../audit-log/entities/audit-log.entity';
     PassportModule,
     JwtModule,
     AuthService,
+    MfaService,
+    BackupCodesService,
+    TokenCryptService,
   ],
 })
 export class AuthModule {}

@@ -28,6 +28,30 @@ export class User {
   @Column({ name: 'locked_until', type: 'timestamp', nullable: true })
   lockedUntil: Date | null;
 
+  @Column({ name: 'mfa_enabled', default: false })
+  mfaEnabled: boolean;
+
+  @Column({ name: 'mfa_secret', type: 'text', nullable: true })
+  mfaSecret: string | null;
+
+  @Column({ name: 'mfa_backup_codes', type: 'text', nullable: true })
+  mfaBackupCodes: string | null;
+
+  @Column({ name: 'mfa_temp_token', type: 'text', nullable: true })
+  mfaTempToken: string | null;
+
+  @Column({ name: 'mfa_temp_token_expires', type: 'timestamp', nullable: true })
+  mfaTempTokenExpires: Date | null;
+
+  @Column({ name: 'mfa_last_verified', type: 'timestamp', nullable: true })
+  mfaLastVerified: Date | null;
+
+  @Column({ name: 'mfa_failed_attempts', default: 0 })
+  mfaFailedAttempts: number;
+
+  @Column({ name: 'mfa_locked_until', type: 'timestamp', nullable: true })
+  mfaLockedUntil: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

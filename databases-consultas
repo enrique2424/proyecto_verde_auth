@@ -1,0 +1,18 @@
+-- Sesiones activas de un usuario
+SELECT id, LEFT(refresh_token_hash, 40), is_revoked, expires_at 
+FROM sessions 
+WHERE user_id = 'tu-user-id-aqui' 
+  AND is_revoked = false 
+  AND expires_at > NOW();
+
+-- Ver cuántas sesiones activas tiene un usuario
+SELECT COUNT(*) as sesiones_activas 
+FROM sessions 
+WHERE user_id = 'tu-user-id-aqui' 
+  AND is_revoked = false 
+  AND expires_at > NOW();
+
+-- Todas las sesiones ordenadas por expiración
+SELECT id, user_id, is_revoked, expires_at 
+FROM sessions 
+ORDER BY expires_at DESC;

@@ -60,4 +60,15 @@ export class JwtAuthService {
       return null;
     }
   }
+
+  async generateTokens(
+    userId: string,
+    email: string,
+    device: string,
+    ip: string,
+  ): Promise<{ accessToken: string; refreshToken: string; expiresIn: number }> {
+    const accessToken = this.generateAccessToken(userId, email);
+    const { token: refreshToken } = this.generateRefreshToken(userId);
+    return { accessToken, refreshToken, expiresIn: 900 };
+  }
 }

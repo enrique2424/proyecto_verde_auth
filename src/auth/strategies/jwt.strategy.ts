@@ -9,13 +9,12 @@ import { JwtPayLoad } from './interfaces/jwt-payload.interface';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(configServices: ConfigService) {
     super({
-      secretOrKey: configServices.get('JWT_SECRET'),
+      secretOrKey: configServices.get('JWT_ACCESS_SECRET'),
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     });
   }
 
   validate(payload: JwtPayLoad) {
-    const { name } = payload;
-    return name;
+    return { userId: payload.sub, email: payload.email };
   }
 }

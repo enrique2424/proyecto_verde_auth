@@ -47,4 +47,78 @@ export class UsersService {
     user.lockedUntil = null;
     await this.userRepository.save(user);
   }
+
+  async findByMfaTempToken(tempToken: string): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { mfaTempToken: tempToken },
+    });
+  }
+
+  async enableMfa(userId: string, encryptedBackupCodes: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      mfaEnabled: true,
+      mfaBackupCodes: encryptedBackupCodes,
+    });
+  }
+
+  async disableMfa(userId: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      mfaEnabled: false,
+      mfaSecret: null,
+      mfaBackupCodes: null,
+      mfaTempToken: null,
+      mfaTempTokenExpires: null,
+      mfaFailedAttempts: 0,
+      mfaLockedUntil: null,
+    });
+  }
+
+  async clearMfaTempToken(userId: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      mfaTempToken: null,
+      mfaTempTokenExpires: null,
+      mfaLastVerified: new Date(),
+    });
+  }
+
+  async updateBackupCodes(userId: string, encryptedCodes: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      mfaBackupCodes: encryptedCodes,
+    });
+  }
+
+  async setMfaTempToken(
+    userId: string,
+    tempToken: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    await this.userRepository.update(userId, {
+      mfaTempToken: tempToken,
+      mfaTempTokenExpires: expiresAt,
+    });
+  }
+
+  async incrementMfaFailedAttempts(userId: string): Promise<void> {
+    const user = await this.findById(userId);
+    if (!user) return;
+
+    user.mfaFailedAttempts += 1;
+    if (user.mfaFailedAttempts >= 3) {
+      user.mfaLockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+    }
+    await this.userRepository.save(user);
+  }
+
+  async resetMfaFailedAttempts(userId: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      mfaFailedAttempts: 0,
+      mfaLockedUntil: null,
+    });
+  }
+
+  async isMfaLocked(userId: string): Promise<boolean> {
+    const user = await this.findById(userId);
+    if (!user) return false;
+    return user.mfaLockedUntil !== null && new Date(user.mfaLockedUntil) > new Date();
+  }
 }

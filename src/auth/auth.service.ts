@@ -9,11 +9,13 @@ import { AuditLogService } from '../audit-log/audit-log.service';
 import { JwtAuthService } from './jwt/jwt.service';
 import { ConfigService } from '@nestjs/config';
 import { LoginDto } from './dto/login.dto';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
   private readonly maxLoginAttempts: number;
   private readonly lockoutDurationMinutes: number;
+  private readonly mfaTempTokenTtlMinutes = 5;
 
   constructor(
     private readonly usersService: UsersService,
@@ -50,6 +52,22 @@ export class AuthService {
     }
 
     await this.usersService.resetFailedAttempts(user);
+
+    if (user.mfaEnabled) {
+      const tempToken = randomBytes(32).toString('hex');
+      const expiresAt = new Date(
+        Date.now() + this.mfaTempTokenTtlMinutes * 60 * 1000,
+      );
+      await this.usersService.setMfaTempToken(user.id, tempToken, expiresAt);
+
+      await this.auditLogService.log('MFA_PENDING', user.id, ip, device, true);
+
+      return {
+        success: true,
+        needsMfa: true,
+        tempToken,
+      };
+    }
 
     const accessToken = this.jwtAuthService.generateAccessToken(
       user.id,

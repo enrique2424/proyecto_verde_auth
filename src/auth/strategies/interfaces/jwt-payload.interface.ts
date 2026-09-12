@@ -1,6 +1,7 @@
 export interface JwtPayLoad {
-  name: string;
-  collectorId: number;
-  id: string;
-  roleId: number;
+  sub: string;
+  email: string;
+  type: 'access' | 'refresh';
+  iat: number;
+  exp: number;
 }
