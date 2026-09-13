@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: banco-verde-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-data:/loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring
+
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: banco-verde-promtail
+    volumes:
+      - ./logs:/var/log/myapp
+      - ./promtail-config.yml:/etc/promtail/promtail.yml
+    restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: banco-verde-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=redteam123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_ALERTING_ENABLED=true
+      - GF_ALERTING_ERROR_OR_ALERTING=true
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana-data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  loki-data:
+  grafana-data:

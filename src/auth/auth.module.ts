@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { AdminController } from './admin.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { TokenCryptService } from './token-crypt/token-crypt.service';
 import { JwtAuthService } from './jwt/jwt.service';
@@ -22,7 +23,7 @@ import { Session } from '../sessions/entities/session.entity';
 import { AuditLog } from '../audit-log/entities/audit-log.entity';
 
 @Module({
-  controllers: [AuthController, MfaController],
+  controllers: [AuthController, MfaController, AdminController],
   providers: [
     AuthService,
     JwtAuthService,

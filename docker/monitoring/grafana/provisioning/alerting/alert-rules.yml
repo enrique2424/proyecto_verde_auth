@@ -1,0 +1,131 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Security Alerts
+    folder: Security
+    interval: 1m
+    rules:
+      - uid: multiple-failed-logins
+        title: Multiple Failed Login Attempts
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki-security
+            model:
+              expr: sum by (ip) (count_over_time({service="banco-verde-iam", eventType="login_failed"}[10m]))
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: []
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - B
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+              type: reduce
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 5
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        annotations:
+          description: More than 5 failed login attempts detected from the same IP in the last 10 minutes
+          summary: Multiple failed login attempts detected
+        labels:
+          severity: warning
+          team: security
+        isPaused: false
+
+      - uid: account-locked
+        title: Account Locked
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki-security
+            model:
+              expr: count_over_time({service="banco-verde-iam", eventType="account_locked"}[5m])
+              refId: A
+        noDataState: NoData
+        execErrState: Error
+        for: 30s
+        annotations:
+          description: An account has been locked due to multiple failed login attempts
+          summary: Account lockout detected
+        labels:
+          severity: critical
+          team: security
+        isPaused: false
+
+      - uid: new-device-login
+        title: New Device Login
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki-security
+            model:
+              expr: count_over_time({service="banco-verde-iam", eventType="new_device_login"}[5m])
+              refId: A
+        noDataState: NoData
+        execErrState: Error
+        for: 0s
+        annotations:
+          description: A login from a new device was detected
+          summary: New device login alert
+        labels:
+          severity: info
+          team: security
+        isPaused: false

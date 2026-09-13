@@ -1,0 +1,23 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /var/log/promtail/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    timeout: 10s
+    batchwait: 5s
+    batchsize: 102400
+
+scrape_configs:
+  - job_name: banco-verde-iam
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: banco-verde-iam
+          service: banco-verde-iam
+          environment: development
+        __path__: /var/log/myapp/*.log
