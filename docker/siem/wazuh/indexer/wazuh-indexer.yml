@@ -1,0 +1,36 @@
+network.host: 0.0.0.0
+node.name: wazuh-indexer
+cluster.name: banco-verde-cluster
+discovery.type: single-node
+
+plugins:
+  security:
+    ssl:
+      transport.pemcert_filepath: /usr/share/wazuh-indexer/config/root-ca.pem
+      transport.pemkey_filepath: /usr/share/wazuh-indexer/config/admin-key.pem
+      transport.pemtrustedcas_filepath: /usr/share/wazuh-indexer/config/root-ca.pem
+      http.ssl.enabled: true
+      http.ssl.verification_mode: certificate
+    allow_unsafe_demographics: false
+    enable_snapshot_restore_privilege: true
+    run_as: false
+
+opensearch_security.ssl.http.enabled: true
+opensearch_security.ssl.http.pemcert_filepath: /usr/share/wazuh-indexer/config/root-ca.pem
+opensearch_security.ssl.http.pemkey_filepath: /usr/share/wazuh-indexer/config/admin-key.pem
+opensearch_security.ssl.http.pemtrustedcas_filepath: /usr/share/wazuh-indexer/config/root-ca.pem
+
+opensearch_security.authcz.admin_dn:
+  - CN=admin
+
+indices:
+  default:
+    primary:
+      number_of_shards: 1
+      number_of_replicas: 0
+
+cluster.routing.allocation.disk.threshold_enabled: false
+
+action.auto_create_index: true
+plugins.security.audit.type: internal_elasticsearch
+plugins.security.audit.enabled: true

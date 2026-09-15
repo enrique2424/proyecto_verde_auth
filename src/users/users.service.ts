@@ -98,6 +98,12 @@ export class UsersService {
     });
   }
 
+  async setMfaSecret(userId: string, encryptedSecret: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      mfaSecret: encryptedSecret,
+    });
+  }
+
   async incrementMfaFailedAttempts(userId: string): Promise<void> {
     const user = await this.findById(userId);
     if (!user) return;
@@ -120,5 +126,27 @@ export class UsersService {
     const user = await this.findById(userId);
     if (!user) return false;
     return user.mfaLockedUntil !== null && new Date(user.mfaLockedUntil) > new Date();
+  }
+
+  async enableBiometric(userId: string, deviceBiometricId: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      biometricEnabled: true,
+      deviceBiometricId,
+      preferredMfaMethod: 'biometric',
+    });
+  }
+
+  async disableBiometric(userId: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      biometricEnabled: false,
+      deviceBiometricId: null,
+      preferredMfaMethod: 'totp',
+    });
+  }
+
+  async validateBiometric(userId: string, deviceBiometricId: string): Promise<boolean> {
+    const user = await this.findById(userId);
+    if (!user) return false;
+    return user.biometricEnabled && user.deviceBiometricId === deviceBiometricId;
   }
 }

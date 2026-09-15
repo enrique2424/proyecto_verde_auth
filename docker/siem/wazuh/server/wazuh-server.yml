@@ -1,0 +1,57 @@
+<ossec_config>
+  <global>
+    <jsonout_output>yes</jsonout_output>
+    <alerts_log>yes</alerts_log>
+    <logall>yes</logall>
+    <logall_json>yes</logall_json>
+    <email_notification>yes</email_notification>
+    <smtp_server>localhost</smtp_server>
+    <email_from>siem@bancoverde.com</email_from>
+    <email_to>soc@bancoverde.com</email_to>
+    <agents_disconnection_time>10m</agents_disconnection_time>
+    <agents_disconnection_alert_time>5m</agents_disconnection_alert_time>
+  </global>
+
+  <alerts>
+    <alerts_log>yes</alerts_log>
+    <logall>yes</logall>
+    <level>7</level>
+    <rule_id>100001,100002,100003,100010,100011,100020,100021,100030,100040,100050,100100,100101</level>
+  </alerts>
+
+  <logging>
+    <logall>yes</logall>
+    <logall_json>yes</logall_json>
+    <files>
+      <file>/var/ossec/logs/active-responses.log</file>
+      <file>/var/ossec/logs/alerts/alerts.json</file>
+    </files>
+  </logging>
+
+  <remote>
+    <connection>syslog</connection>
+    <port>514</port>
+    <protocol>tcp,udp</protocol>
+    <allowed-ips>0.0.0.0/0</allowed-ips>
+  </remote>
+
+  <command>
+    <name>fcmpush</name>
+    <executable>fcmpush.py</executable>
+    <expect>user</expect>
+    <timeout_allowed>yes</timeout_allowed>
+  </command>
+
+  <active-response>
+    <command>fcmpush</command>
+    <location>local</location>
+    <rules_id>100002,100010,100021</rules_id>
+    <timeout>300</timeout>
+  </active-response>
+
+  <integration>
+    <name>custom-fcm</name>
+    <hook_url>https://fcm.googleapis.com/fcm/send</hook_url>
+    <alert_format>json</alert_format>
+  </integration>
+</ossec_config>

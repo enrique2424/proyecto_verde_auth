@@ -12,6 +12,9 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - monitoring
+      - banco-verde-siem
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   promtail:
     image: grafana/promtail:2.9.4
@@ -22,8 +25,11 @@ services:
     restart: unless-stopped
     networks:
       - monitoring
+      - banco-verde-siem
     depends_on:
       - loki
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   grafana:
     image: grafana/grafana:10.2.0
@@ -43,12 +49,17 @@ services:
     restart: unless-stopped
     networks:
       - monitoring
+      - banco-verde-siem
     depends_on:
       - loki
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
   monitoring:
     driver: bridge
+  banco-verde-siem:
+    external: true
 
 volumes:
   loki-data:

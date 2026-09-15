@@ -9,3 +9,12 @@ providers:
     editable: true
     options:
       path: /var/lib/grafana/dashboards
+
+  - name: 'SIEM Dashboards'
+    orgId: 1
+    folder: 'SIEM'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

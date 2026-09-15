@@ -1,0 +1,179 @@
+<!--
+  Banco Verde - Wazuh Security Rules
+  MITRE ATT&CK Framework Aligned
+  Version: 1.0
+  Last Updated: 2026-09-14
+-->
+
+<!-- TTP: Credential Access - Brute Force (T1110) -->
+<rule id="100001" level="10" frequency="10" timeframe="60" ignore="60">
+  <if_sid>200</if_sid>
+  <field name="action">LOGIN</field>
+  <field name="result">FAILED</field>
+  <description>Banco Verde: Multiple failed login attempts from different IPs - Potential brute force attack</description>
+  <mitre>
+    <id>T1110</id>
+    <id>T1110.001</id>
+  </mitre>
+  <group>brute_force,credential_access,pci_dss_8.1,gdpr_32_1</group>
+</rule>
+
+<!-- TTP: Credential Access - Same user, different IPs -->
+<rule id="100002" level="12" frequency="8" timeframe="30" ignore="30">
+  <if_sid>100001</if_sid>
+  <same_field>user</same_field>
+  <different_field>ip</different_field>
+  <description>Banco Verde: Same user experiencing brute force from multiple IPs - CRITICAL</description>
+  <mitre>
+    <id>T1110</id>
+    <id>T1110.001</id>
+  </mitre>
+  <group>brute_force,credential_access,critical,pci_dss_8.1</group>
+</rule>
+
+<!-- TTP: Defense Evasion - Valid Accounts (T1078) -->
+<rule id="100003" level="8">
+  <if_sid>100002</if_sid>
+  <field name="action">LOGIN</field>
+  <field name="result">SUCCESS</field>
+  <description>Banco Verde: Login SUCCESS after brute force pattern - Account may be compromised</description>
+  <mitre>
+    <id>T1078</id>
+    <id>T1110</id>
+  </mitre>
+  <group>account_compromised,credential_access,critical</group>
+</rule>
+
+<!-- TTP: Initial Access - Impossible Travel (T1078) -->
+<rule id="100010" level="14">
+  <if_sid>200</if_sid>
+  <field name="action">LOGIN</field>
+  <field name="result">SUCCESS</field>
+  <description>Banco Verde: Impossible travel detected - simultaneous access from geographically incompatible locations</description>
+  <mitre>
+    <id>T1078</id>
+  </mitre>
+  <group>impossible_travel,anomaly,critical,pci_dss_8.1,gdpr_32_3</group>
+</rule>
+
+<!-- TTP: Initial Access - Geographic anomaly -->
+<rule id="100011" level="12" frequency="2" timeframe="30">
+  <if_sid>200</if_sid>
+  <field name="action">LOGIN</field>
+  <same_field>user</same_field>
+  <different_field>geo.country</different_field>
+  <description>Banco Verde: User logged in from different countries in short time window</description>
+  <mitre>
+    <id>T1078</id>
+  </mitre>
+  <group>impossible_travel,anomaly,high_priority</group>
+</rule>
+
+<!-- TTP: Persistence - Critical Config Changes outside business hours (T1078) -->
+<rule id="100020" level="12">
+  <if_sid>200</if_sid>
+  <field name="action">CONFIG_CHANGE</field>
+  <field name="result">SUCCESS</field>
+  <time>between 00:00 and 06:00</time>
+  <description>Banco Verde: Critical configuration change detected outside business hours</description>
+  <mitre>
+    <id>T1078</id>
+    <id>T1484</id>
+  </mitre>
+  <group>config_change,after_hours,critical,compliance</group>
+</rule>
+
+<!-- TTP: Persistence - MFA disabled (T1556) -->
+<rule id="100021" level="10">
+  <if_sid>200</if_sid>
+  <field name="action">MFA_DISABLED</field>
+  <field name="result">SUCCESS</field>
+  <description>Banco Verde: MFA disabled - Security degradation detected</description>
+  <mitre>
+    <id>T1078</id>
+    <id>T1556</id>
+  </mitre>
+  <group>mfa_disabled,security_change,high_priority</group>
+</rule>
+
+<!-- TTP: Privilege Escalation - Password Change (T1531) -->
+<rule id="100022" level="9">
+  <if_sid>200</if_sid>
+  <field name="action">PASSWORD_CHANGE</field>
+  <field name="result">SUCCESS</field>
+  <description>Banco Verde: Password changed for account</description>
+  <mitre>
+    <id>T1078</id>
+    <id>T1531</id>
+  </mitre>
+  <group>password_change,account_manipulation</group>
+</rule>
+
+<!-- TTP: Exfiltration - High value transaction -->
+<rule id="100030" level="10">
+  <if_sid>200</if_sid>
+  <field name="action">TRANSFER</field>
+  <field name="result">SUCCESS</field>
+  <field name="metadata.amount">>50000</field>
+  <description>Banco Verde: High-value transaction detected</description>
+  <mitre>
+    <id>T1041</id>
+  </mitre>
+  <group>high_value_transaction,fraud</group>
+</rule>
+
+<!-- TTP: Impact - Account Lockout -->
+<rule id="100040" level="7">
+  <if_sid>200</if_sid>
+  <field name="action">ACCOUNT_LOCKED</field>
+  <field name="result">SUCCESS</field>
+  <description>Banco Verde: Account has been locked due to failed attempts</description>
+  <mitre>
+    <id>T1110</id>
+  </mitre>
+  <group>account_lockout,brute_force</group>
+</rule>
+
+<!-- TTP: Initial Access - New Device Login -->
+<rule id="100050" level="6">
+  <if_sid>200</if_sid>
+  <field name="action">LOGIN</field>
+  <field name="result">SUCCESS</field>
+  <field name="device.fingerprint">new</field>
+  <description>Banco Verde: Login from new device detected</description>
+  <mitre>
+    <id>T1078</id>
+  </mitre>
+  <group>new_device,anomaly</group>
+</rule>
+
+<!-- Log Integrity Validation -->
+<rule id="100100" level="10">
+  <if_sid>200</if_sid>
+  <field name="hashAlgorithm">SHA-256</field>
+  <field name="hash">exists</field>
+  <description>Banco Verde: Log entry with integrity hash detected</description>
+  <group>log_integrity,forensics</group>
+</rule>
+
+<rule id="100101" level="14">
+  <if_sid>200</if_sid>
+  <field name="hash">invalid</field>
+  <description>Banco Verde: CRITICAL - Log integrity violation detected - hash mismatch</description>
+  <mitre>
+    <id>T1070</id>
+  </mitre>
+  <group>log_integrity_violation,forensics,critical</group>
+</rule>
+
+<!-- Fraud Detection -->
+<rule id="100110" level="12">
+  <if_sid>200</if_sid>
+  <field name="action">FRAUD_CHECK</field>
+  <field name="metadata.riskScore">>80</field>
+  <description>Banco Verde: High fraud risk score detected</description>
+  <mitre>
+    <id>T1041</id>
+  </mitre>
+  <group>fraud,high_risk</group>
+</rule>

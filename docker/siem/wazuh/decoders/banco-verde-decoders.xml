@@ -1,0 +1,54 @@
+<decoder name="banco-verde-json">
+  <parent>json</parent>
+  <prematch>^\{"timestamp"</prematch>
+  <json_decode>yes</json_decode>
+
+  <order>json</order>
+
+  <field name="timestamp">timestamp</field>
+  <field name="service">service</field>
+  <field name="user">user</field>
+  <field name="action">action</field>
+  <field name="result">result</field>
+  <field name="ip">ip</field>
+  <field name="device.type">device.type</field>
+  <field name="device.os">device.os</field>
+  <field name="device.name">device.name</field>
+  <field name="device.fingerprint">device.fingerprint</field>
+  <field name="geo.country">geo.country</field>
+  <field name="geo.city">geo.city</field>
+  <field name="geo.latitude">geo.latitude</field>
+  <field name="geo.longitude">geo.longitude</field>
+  <field name="metadata.reason">metadata.reason</field>
+  <field name="metadata.attempts">metadata.attempts</field>
+  <field name="metadata.sessionId">metadata.sessionId</field>
+  <field name="metadata.transactionId">metadata.transactionId</field>
+  <field name="metadata.amount">metadata.amount</field>
+  <field name="metadata.currency">metadata.currency</field>
+  <field name="metadata.riskScore">metadata.riskScore</field>
+  <field name="hash">hash</field>
+  <field name="hashAlgorithm">hashAlgorithm</field>
+  <field name="previousHash">previousHash</field>
+  <field name="logSequenceNumber">logSequenceNumber</field>
+</decoder>
+
+<decoder name="banco-verde-service">
+  <parent>banco-verde-json</parent>
+  <regex>^\{"timestamp".*"service":"(\w+)"</regex>
+  <order>service</order>
+  <field name="service">service</field>
+</decoder>
+
+<decoder name="banco-verde-action">
+  <parent>banco-verde-json</parent>
+  <regex>^\{"timestamp".*"action":"(\w+)"</regex>
+  <order>action</order>
+  <field name="action">action</field>
+</decoder>
+
+<decoder name="banco-verde-geo">
+  <parent>banco-verde-json</parent>
+  <regex>^\{"timestamp".*"geo":\{"country":"([^"]+)"</regex>
+  <order>geo</order>
+  <field name="geo.country">geo.country</field>
+</decoder>

@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   Ip,
   Req,
@@ -8,11 +9,17 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { JwtAuthService } from './jwt/jwt.service';
+import { UsersService } from '../users/users.service';
 import { LoginDto, RefreshTokenDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly jwtAuthService: JwtAuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('login')
   @HttpCode(200)
@@ -57,5 +64,34 @@ export class AuthController {
   @HttpCode(200)
   verify(@Body() body: { token: string }) {
     return this.authService.verify(body.token);
+  }
+
+  @Get('me')
+  @HttpCode(200)
+  async me(@Headers('authorization') authHeader: string) {
+    if (!authHeader?.startsWith('Bearer ')) {
+      return { success: false, message: 'Token no proporcionado' };
+    }
+    const token = authHeader.substring(7);
+    const payload = this.jwtAuthService.verifyAccessToken(token);
+    if (!payload) {
+      return { success: false, message: 'Token inválido' };
+    }
+
+    const user = await this.usersService.findById(payload.sub);
+    if (!user) {
+      return { success: false, message: 'Usuario no encontrado' };
+    }
+
+    return {
+      success: true,
+      data: {
+        userId: user.id,
+        email: user.email,
+        mfaEnabled: user.mfaEnabled,
+        biometricEnabled: user.biometricEnabled,
+        preferredMfaMethod: user.preferredMfaMethod,
+      },
+    };
   }
 }

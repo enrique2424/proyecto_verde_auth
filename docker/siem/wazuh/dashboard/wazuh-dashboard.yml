@@ -1,0 +1,16 @@
+server.name: wazuh-dashboard
+server.port: 5601
+server.host: 0.0.0.0
+
+opensearch.hosts: https://wazuh.indexer:9200
+opensearch.ssl.verificationMode: certificate
+opensearch.requestHeadersWhitelist: ["securitytenant","Authorization"]
+opensearch_security.multitenancy.enabled: false
+opensearch_security.cookie.secure: true
+
+opensearch.username: "kibanaserver"
+opensearch.password: "kibanaserver"
+
+logging.verbose: true
+ops.cGroupOverrides.cpuPath: /sys/fs/cgroup/cpu,cpuacct
+ops.cGroupOverrides.cpuAcctPath: /sys/fs/cgroup/cpu,cpuacct

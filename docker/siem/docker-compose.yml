@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  wazuh.indexer:
+    image: wazuh/wazuh-indexer:4.9.0
+    hostname: wazuh-indexer
+    container_name: banco-verde-wazuh-indexer
+    restart: unless-stopped
+    environment:
+      - INDEXER_MEMORY=4096
+      - INDEXER_JAVA_OPTS=-Xms2048m -Xmx2048m
+      - WAZUHMONITOR_ROOT_PASSWORD=ChangeThisPassword123!
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 655360
+        hard: 655360
+    volumes:
+      - wazuh-indexer-data:/var/lib/wazuh-indexer
+      - ./wazuh/indexer/wazuh-indexer.yml:/wazuh-indexer/opensearch.yml:ro
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    networks:
+      - siem-network
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/share/wazuh-indexer/bin/opensearch-plugin list --security | grep -q 'opensearch-security'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  wazuh.server:
+    image: wazuh/wazuh-manager:4.9.0
+    hostname: wazuh-server
+    container_name: banco-verde-wazuh-server
+    restart: unless-stopped
+    environment:
+      - WAZUH_API_USERNAME=wazuh
+      - WAZUH_API_PASSWORD=ChangeThisPassword123!
+      - WAZUH_MONITOR_ROOT_PASSWORD=ChangeThisPassword123!
+      - INDEXER_HOST=wazuh.indexer
+    volumes:
+      - wazuh-server-data:/var/ossec
+      - wazuh-server-logs:/var/ossec/logs
+      - ./wazuh/server/wazuh-server.yml:/wazuh/etc/ossec.conf:ro
+      - ./wazuh/rules:/var/ossec/etc/rules:ro
+      - ./wazuh/decoders:/var/ossec/etc/decoders:ro
+      - ./wazuh/alerts:/var/ossec/integrations:ro
+    ports:
+      - "1514:1514/udp"
+      - "1515:1515"
+      - "514:514/udp"
+      - "514:514/tcp"
+    networks:
+      - siem-network
+    depends_on:
+      wazuh.indexer:
+        condition: service_healthy
+
+  wazuh.dashboard:
+    image: wazuh/wazuh-dashboard:4.9.0
+    hostname: wazuh-dashboard
+    container_name: banco-verde-wazuh-dashboard
+    restart: unless-stopped
+    environment:
+      - WAZUH_API_USERNAME=wazuh
+      - WAZUH_API_PASSWORD=ChangeThisPassword123!
+      - WAZUH_API_HOST=wazuh.server
+      - OPENSEARCH_HOSTS=https://wazuh.indexer:9200
+      - WAZUH_SECURITY_DASHBOARDS=true
+    volumes:
+      - wazuh-dashboard-data:/usr/share/wazuh-dashboard/data
+      - ./wazuh/dashboard/wazuh-dashboard.yml:/usr/share/wazuh-dashboard/config/opensearch_dashboards.yml:ro
+    ports:
+      - "443:5601"
+    networks:
+      - siem-network
+    depends_on:
+      - wazuh.indexer
+      - wazuh.server
+
+  filebeat-iam:
+    image: docker.elastic.co/beats/filebeat:8.11.0
+    container_name: banco-verde-filebeat-iam
+    restart: unless-stopped
+    user: root
+    volumes:
+      - ../../logs:/var/log/banco-verde:ro
+      - ./wazuh/filebeat/filebeat-iam.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./wazuh/filebeat/validate-hash.js:/usr/share/filebeat/scripts/validate-hash.js:ro
+      - filebeat-data:/usr/share/filebeat/data
+    networks:
+      - siem-network
+    depends_on:
+      - wazuh.server
+    command: filebeat -e -strict.perms=false
+
+networks:
+  siem-network:
+    driver: bridge
+    name: banco-verde-siem
+
+volumes:
+  wazuh-indexer-data:
+  wazuh-server-data:
+  wazuh-server-logs:
+  wazuh-dashboard-data:
+  filebeat-data:

@@ -11,3 +11,15 @@ datasources:
     jsonData:
       httpHeaderName1: ""
       httpHeaderValue1: ""
+
+  - name: Wazuh
+    type: wazuh-wazuh
+    access: proxy
+    url: http://wazuh-dashboard:5601
+    uid: wazuh-siem
+    isDefault: false
+    editable: true
+    jsonData:
+      timeInterval: 10s
+    secureJsonData:
+      apiKey: "ChangeThisPassword123!"

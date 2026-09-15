@@ -1,0 +1,141 @@
+# Banco Verde - MITRE ATT&CK Framework Aligned Correlation Rules
+# Based on ATT&CK v14
+---
+mitre_tactics:
+  - id: TA0001
+    name: Initial Access
+    techniques:
+      - id: T1078
+        name: Valid Accounts
+        description: Attackers may obtain and abuse credentials as method for initial access
+        rules: [100010, 100011, 100050]
+        subtechniques:
+          - id: T1078.001
+            name: Default Accounts
+          - id: T1078.003
+            name: Local Accounts
+
+  - id: TA0006
+    name: Credential Access
+    techniques:
+      - id: T1110
+        name: Brute Force
+        rules: [100001, 100002, 100003, 100040]
+        subtechniques:
+          - id: T1110.001
+            name: Credential Stuffing
+          - id: T1110.003
+            name: Password Spraying
+          - id: T1110.004
+            name: Credential API
+      - id: T1556
+        name: Modify Authentication Process
+        rules: [100021]
+
+  - id: TA0003
+    name: Persistence
+    techniques:
+      - id: T1078
+        name: Valid Accounts
+        rules: [100020, 100021]
+      - id: T1136
+        name: Create Account
+
+  - id: TA0004
+    name: Privilege Escalation
+    techniques:
+      - id: T1078
+        name: Valid Accounts
+        rules: [100022]
+
+  - id: TA0005
+    name: Defense Evasion
+    techniques:
+      - id: T1070
+        name: Indicator Removal
+        rules: [100101]
+        subtechniques:
+          - id: T1070.001
+            name: Clear Logs
+      - id: T1484
+        name: Domain Policy Modification
+        rules: [100020]
+
+  - id: TA0011
+    name: Impact
+    techniques:
+      - id: T1531
+        name: Account Access Removal
+        rules: [100022]
+
+correlation_rules:
+  brute_force_multi_ip:
+    name: "Brute Force from Multiple IPs"
+    severity: HIGH
+    mitre_tactics: [TA0001, TA0006]
+    mitre_techniques: [T1078, T1110]
+    conditions:
+      - event.action: "LOGIN"
+      - event.result: "FAILED"
+      - count: ">5"
+      - timeframe: "5m"
+      - distinct_ips: ">3"
+    outputs:
+      - soc_alert: true
+      - push_notification: true
+      - severity: HIGH
+
+  impossible_travel:
+    name: "Impossible Travel Detected"
+    severity: CRITICAL
+    mitre_tactics: [TA0001]
+    mitre_techniques: [T1078]
+    conditions:
+      - event.action: "LOGIN"
+      - event.result: "SUCCESS"
+      - same_user: true
+      - distance_km: ">1000"
+      - time_minutes: "<60"
+    outputs:
+      - soc_alert: true
+      - push_notification: true
+      - severity: CRITICAL
+      - auto_lock: true
+
+  after_hours_config_change:
+    name: "Critical Config Change Outside Business Hours"
+    severity: HIGH
+    mitre_tactics: [TA0003, TA0005]
+    mitre_techniques: [T1078, T1484]
+    conditions:
+      - event.action: "CONFIG_CHANGE"
+      - event.result: "SUCCESS"
+      - time_range: "00:00-06:00"
+    outputs:
+      - soc_alert: true
+      - severity: HIGH
+
+  mfa_disabled:
+    name: "MFA Security Mechanism Disabled"
+    severity: HIGH
+    mitre_tactics: [TA0003, TA0006]
+    mitre_techniques: [T1078, T1556]
+    conditions:
+      - event.action: "MFA_DISABLED"
+      - event.result: "SUCCESS"
+    outputs:
+      - soc_alert: true
+      - push_notification: true
+      - severity: HIGH
+
+  log_integrity_violation:
+    name: "Log Integrity Chain Broken"
+    severity: CRITICAL
+    mitre_tactics: [TA0005]
+    mitre_techniques: [T1070]
+    conditions:
+      - event.hash: "invalid OR missing"
+    outputs:
+      - soc_alert: true
+      - severity: CRITICAL
+      - auto_lock: true

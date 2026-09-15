@@ -38,7 +38,18 @@ export class MfaController {
   @HttpCode(200)
   async setup(@Headers('x-user-id') userId: string): Promise<MfaSetupResponseDto> {
     const user = await this.usersService.findById(userId);
-    return this.mfaService.generateSetupResponse(user.email);
+
+    const { secret, otpauthUri, qrCodeUrl } =
+      await this.mfaService.generateSetupResponse(user.email);
+
+    const encryptedSecret = await this.mfaService.encryptSecret(secret);
+    await this.usersService.setMfaSecret(userId, encryptedSecret);
+
+    return {
+      secret,
+      otpauthUri,
+      qrCodeUrl,
+    };
   }
 
   @Post('verify-setup')
@@ -51,7 +62,7 @@ export class MfaController {
     const user = await this.usersService.findById(userId);
 
     const decryptedSecret = await this.mfaService.decryptSecret(user.mfaSecret);
-    const isValid = this.mfaService.verifyTotp(decryptedSecret, dto.code);
+    const isValid = await this.mfaService.verifyTotp(decryptedSecret, dto.code);
 
     if (!isValid) {
       return { success: false, message: 'Código inválido' };
@@ -90,7 +101,7 @@ export class MfaController {
     }
 
     const decryptedSecret = await this.mfaService.decryptSecret(user.mfaSecret);
-    const isCodeValid = this.mfaService.verifyTotp(decryptedSecret, dto.code);
+    const isCodeValid = await this.mfaService.verifyTotp(decryptedSecret, dto.code);
 
     if (!isCodeValid) {
       return { success: false, message: 'Código MFA incorrecto' };
@@ -195,6 +206,71 @@ export class MfaController {
       ),
     );
 
+    await this.usersService.clearMfaTempToken(user.id);
+
+    const tokens = await this.jwtAuthService.generateTokens(user.id, user.email, ip, device);
+
+    return {
+      success: true,
+      ...tokens,
+    };
+  }
+
+  @Post('enable-biometric')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(200)
+  async enableBiometric(
+    @Headers('x-user-id') userId: string,
+    @Body() dto: { deviceBiometricId: string },
+  ) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user.mfaEnabled) {
+      return { success: false, message: 'MFA debe estar habilitado primero' };
+    }
+
+    await this.usersService.enableBiometric(userId, dto.deviceBiometricId);
+
+    return { success: true, message: 'Biométrico habilitado' };
+  }
+
+  @Post('disable-biometric')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(200)
+  async disableBiometric(@Headers('x-user-id') userId: string) {
+    await this.usersService.disableBiometric(userId);
+    return { success: true, message: 'Biométrico deshabilitado' };
+  }
+
+  @Post('verify-biometric')
+  @Throttle(3, 300000)
+  @HttpCode(200)
+  async verifyBiometric(@Body() dto: { tempToken: string; deviceBiometricId: string }, @Req() request: any) {
+    const ip = request.ip;
+    const device = request.headers['user-agent'] || 'unknown';
+
+    const user = await this.usersService.findByMfaTempToken(dto.tempToken);
+
+    if (!user) {
+      return { success: false, message: 'Sesión MFA expirada o inválida' };
+    }
+
+    if (user.mfaTempTokenExpires < new Date()) {
+      return { success: false, message: 'Sesión MFA expirada' };
+    }
+
+    if (await this.usersService.isMfaLocked(user.id)) {
+      return { success: false, message: 'MFA bloqueado por demasiados intentos fallidos' };
+    }
+
+    const isValid = await this.usersService.validateBiometric(user.id, dto.deviceBiometricId);
+
+    if (!isValid) {
+      await this.usersService.incrementMfaFailedAttempts(user.id);
+      return { success: false, message: 'Biométrico no válido para este dispositivo' };
+    }
+
+    await this.usersService.resetMfaFailedAttempts(user.id);
     await this.usersService.clearMfaTempToken(user.id);
 
     const tokens = await this.jwtAuthService.generateTokens(user.id, user.email, ip, device);

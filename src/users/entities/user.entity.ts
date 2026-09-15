@@ -52,6 +52,15 @@ export class User {
   @Column({ name: 'mfa_locked_until', type: 'timestamp', nullable: true })
   mfaLockedUntil: Date | null;
 
+  @Column({ name: 'biometric_enabled', default: false })
+  biometricEnabled: boolean;
+
+  @Column({ name: 'device_biometric_id', type: 'text', nullable: true })
+  deviceBiometricId: string | null;
+
+  @Column({ name: 'preferred_mfa_method', type: 'varchar', default: 'totp' })
+  preferredMfaMethod: 'totp' | 'biometric';
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -66,6 +66,8 @@ export class AuthService {
         success: true,
         needsMfa: true,
         tempToken,
+        preferredMfaMethod: user.preferredMfaMethod,
+        biometricEnabled: user.biometricEnabled,
       };
     }
 
