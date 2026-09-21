@@ -34,4 +34,22 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# Environment and secrets
 .env
+.env.*
+!.env.example
+firebase-service-account.json
+private_key.pem
+*.pem
+
+# Docker monitoring data (no commit)
+docker/monitoring/grafana-data/
+docker/monitoring/loki-data/
+
+# Temporary files
+Untitled-1.pgsql
+
+# Claude Code
+.claude/
+CLAUDE.md
